@@ -1,0 +1,227 @@
+@import "tailwindcss";
+
+/* Design tokens. Light by default, dark follows the system preference. Text pairs meet WCAG AA (>= 4.5:1). */
+:root {
+  color-scheme: light dark;
+  --bg: #f4f5f9;
+  --surface: #ffffff;
+  --surface-2: #eceef5;
+  --fg: #14161b;
+  --muted: #4a4f5c;
+  --line: #c9cddb;
+  --primary: #1d4ed8;
+  --on-primary: #ffffff;
+  --primary-soft: #dbe4ff;
+  --on-primary-soft: #0b2a7a;
+  --danger: #b3261e;
+  --danger-soft: #fde4e1;
+  --on-danger-soft: #7a1610;
+  --success-soft: #d7f2df;
+  --on-success-soft: #0b4a1f;
+  --warn-soft: #fdecc8;
+  --on-warn-soft: #5c3b00;
+  --info-soft: #d9ecfb;
+  --on-info-soft: #0b3a5c;
+  --neutral-soft: #e4e6ee;
+  --on-neutral-soft: #2a2e38;
+  --focus: #1d4ed8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1015;
+    --surface: #171a21;
+    --surface-2: #20242e;
+    --fg: #eceef3;
+    --muted: #aab0bf;
+    --line: #353a47;
+    --primary: #9db6ff;
+    --on-primary: #0a1f5c;
+    --primary-soft: #1e2d63;
+    --on-primary-soft: #d6e0ff;
+    --danger: #ffb4ab;
+    --danger-soft: #4a1713;
+    --on-danger-soft: #ffd9d4;
+    --success-soft: #12361e;
+    --on-success-soft: #bdf0cb;
+    --warn-soft: #43320a;
+    --on-warn-soft: #ffe3a3;
+    --info-soft: #11324a;
+    --on-info-soft: #c4e4fb;
+    --neutral-soft: #2a2e38;
+    --on-neutral-soft: #d9dce6;
+    --focus: #9db6ff;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-on-primary-soft: var(--on-primary-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-on-danger-soft: var(--on-danger-soft);
+  --color-success-soft: var(--success-soft);
+  --color-on-success-soft: var(--on-success-soft);
+  --color-warn-soft: var(--warn-soft);
+  --color-on-warn-soft: var(--on-warn-soft);
+  --color-info-soft: var(--info-soft);
+  --color-on-info-soft: var(--on-info-soft);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-on-neutral-soft: var(--on-neutral-soft);
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius-card: 1rem;
+  --radius-sheet: 1.5rem;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.1);
+  --shadow-sheet: 0 -8px 32px rgb(0 0 0 / 0.25);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+html {
+  background: var(--bg);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/*
+ * Material-style press feedback: a tonal overlay plus a slight scale.
+ * In the components layer so utilities (e.g. `absolute`) override its `position`.
+ * No overflow clipping: the overlay inherits the radius instead, so badges can sit outside the edge.
+ */
+@layer components {
+  .press {
+    position: relative;
+    transition: transform 120ms var(--ease-standard), background-color 120ms var(--ease-standard);
+  }
+  .press::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 160ms var(--ease-standard);
+    pointer-events: none;
+  }
+  .press:active {
+    transform: scale(0.98);
+  }
+  .press:active::after {
+    opacity: 0.12;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 37%, var(--surface-2) 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .press:active {
+    transform: none;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.sheet-overlay[data-state="open"] {
+  animation: fade-in 200ms var(--ease-standard);
+}
+.sheet-content[data-state="open"] {
+  animation: sheet-in 280ms var(--ease-standard);
+}
+@media (min-width: 768px) {
+  .sheet-content[data-state="open"] {
+    animation: fade-in 200ms var(--ease-standard);
+  }
+}
+
+/*
+ * Horizontally scrolling chip rows: no scrollbar, soft 1rem fade at both edges to hint more content.
+ * Rows use left padding on the scroller and right padding on the (w-max) list, because browsers drop a
+ * scroller's end padding when its content overflows.
+ */
+.chip-row {
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  mask-image: linear-gradient(to right, transparent 0, #000 1rem, #000 calc(100% - 1rem), transparent 100%);
+}
+@media (min-width: 768px) {
+  .chip-row {
+    mask-image: none;
+  }
+}
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  appearance: none;
+}
+/* Pinned directly below the always-visible app bar: status bar inset + 3.5rem bar + 1px bottom border. */
+@layer components {
+  .sticky-header {
+    position: sticky;
+    top: calc(env(safe-area-inset-top) + 3.5rem + 1px);
+  }
+}
+/* Lead details: while the details form has unsaved changes, its Save bar takes the floating button's spot on phones. */
+@media (max-width: 767px) {
+  /* Only while the form is expanded: collapsed, its Save bar is hidden, so the floating button comes back. */
+  body:has(.lead-details-body:not([hidden]) form[data-dirty]) .log-fab {
+    display: none;
+  }
+}
