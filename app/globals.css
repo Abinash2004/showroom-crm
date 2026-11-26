@@ -1,67 +1,58 @@
 @import "tailwindcss";
 
-/* Design tokens. Light by default, dark follows the system preference. Text pairs meet WCAG AA (>= 4.5:1). */
+/*
+ * Design tokens: warm light surfaces only. Contrast comes from tonal layering
+ * (canvas #F5F5F0 -> pebble #EAEAE3 -> porcelain #FBFBF9) and typography, not borders.
+ */
 :root {
-  color-scheme: light dark;
-  --bg: #f4f5f9;
-  --surface: #ffffff;
-  --surface-2: #eceef5;
-  --fg: #14161b;
-  --muted: #4a4f5c;
-  --line: #c9cddb;
-  --primary: #1d4ed8;
+  color-scheme: light;
+  --bg: #f5f5f0;
+  --surface: #fbfbf9;
+  --surface-2: #eaeae3;
+  --surface-2-hover: #e2e2da;
+  --fg: #1b1c1e;
+  --muted: #636468;
+  --line: rgb(27 28 30 / 0.08);
+  --ink: #1b1c1e;
+  --primary: #3b9357;
+  --primary-hover: #317d4a;
+  /* Brighter emerald for small accents on Obsidian (counts, ✕, dates in selected chips); ~8:1 on #1B1C1E. */
+  --accent-on-ink: #5ccf87;
+  /* Red for text on Obsidian (e.g. Deactivate); the regular danger red is too dark there. ~6:1 on #1B1C1E. */
+  --danger-on-ink: #f87171;
   --on-primary: #ffffff;
-  --primary-soft: #dbe4ff;
-  --on-primary-soft: #0b2a7a;
-  --danger: #b3261e;
-  --danger-soft: #fde4e1;
-  --on-danger-soft: #7a1610;
-  --success-soft: #d7f2df;
-  --on-success-soft: #0b4a1f;
-  --warn-soft: #fdecc8;
-  --on-warn-soft: #5c3b00;
-  --info-soft: #d9ecfb;
-  --on-info-soft: #0b3a5c;
-  --neutral-soft: #e4e6ee;
-  --on-neutral-soft: #2a2e38;
-  --focus: #1d4ed8;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0e1015;
-    --surface: #171a21;
-    --surface-2: #20242e;
-    --fg: #eceef3;
-    --muted: #aab0bf;
-    --line: #353a47;
-    --primary: #9db6ff;
-    --on-primary: #0a1f5c;
-    --primary-soft: #1e2d63;
-    --on-primary-soft: #d6e0ff;
-    --danger: #ffb4ab;
-    --danger-soft: #4a1713;
-    --on-danger-soft: #ffd9d4;
-    --success-soft: #12361e;
-    --on-success-soft: #bdf0cb;
-    --warn-soft: #43320a;
-    --on-warn-soft: #ffe3a3;
-    --info-soft: #11324a;
-    --on-info-soft: #c4e4fb;
-    --neutral-soft: #2a2e38;
-    --on-neutral-soft: #d9dce6;
-    --focus: #9db6ff;
-  }
+  --primary-soft: #e2e2da;
+  --on-primary-soft: #1b1c1e;
+  --danger: #be123c;
+  --danger-soft: #f6e3e6;
+  --on-danger-soft: #8f0e2d;
+  --success-soft: #e2efe5;
+  --on-success-soft: #22603a;
+  --warn-soft: #f4ead9;
+  --on-warn-soft: #7a3b06;
+  --info-soft: #e3e9f6;
+  --on-info-soft: #1d4bb8;
+  --neutral-soft: #e2e2da;
+  --on-neutral-soft: #1b1c1e;
+  /* Opened = yellow (a deep gold so the text stays readable on pebble), Booked = blue. */
+  --status-opened: #8a6100;
+  --status-booked: #2563eb;
+  --status-purchased: #2e7d48;
+  --status-rejected: #be123c;
+  --focus: #1b1c1e;
 }
 
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-surface-2-hover: var(--surface-2-hover);
   --color-fg: var(--fg);
   --color-muted: var(--muted);
   --color-line: var(--line);
+  --color-ink: var(--ink);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-on-primary: var(--on-primary);
   --color-primary-soft: var(--primary-soft);
   --color-on-primary-soft: var(--on-primary-soft);
@@ -76,17 +67,28 @@
   --color-on-info-soft: var(--on-info-soft);
   --color-neutral-soft: var(--neutral-soft);
   --color-on-neutral-soft: var(--on-neutral-soft);
-  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --radius-card: 1rem;
-  --radius-sheet: 1.5rem;
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.1);
-  --shadow-sheet: 0 -8px 32px rgb(0 0 0 / 0.25);
+  --color-status-opened: var(--status-opened);
+  --color-status-booked: var(--status-booked);
+  --color-status-purchased: var(--status-purchased);
+  --color-status-rejected: var(--status-rejected);
+  /* One typeface across the app. `font-display` / `font-mono` are kept as aliases so headings and
+     numeric metadata keep their weights; numbers stay aligned through `tabular-nums`. */
+  --font-sans: var(--font-poppins), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-poppins), system-ui, sans-serif;
+  --font-mono: var(--font-poppins), system-ui, sans-serif;
+  --radius-card: 22px;
+  --radius-sheet: 28px;
+  --shadow-card: 0 0 #0000;
+  --shadow-sheet: 0 8px 30px -14px rgb(27 28 30 / 0.08);
+  --shadow-dock: 0 18px 42px -10px rgb(27 28 30 / 0.48);
+  --shadow-rail: 0 20px 50px -15px rgb(27 28 30 / 0.35);
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
 html {
   background: var(--bg);
   -webkit-tap-highlight-color: transparent;
+  /* Also turns off the browser's own pull-to-refresh: refreshing is only via the header's Refresh button. */
   overscroll-behavior-y: contain;
 }
 
@@ -98,18 +100,47 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+/*
+ * Pointer cursor on everything clickable (Tailwind's reset gives buttons the default arrow).
+ * Text, number, date and search inputs and textareas keep their text cursor. Base layer, so a
+ * `cursor-*` utility can still override it. Disabled controls show the default arrow.
+ */
+@layer base {
+  a[href],
+  button,
+  summary,
+  select,
+  label:has(> input[type="checkbox"], > input[type="radio"]),
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="button"],
+  [role="button"],
+  [role="tab"],
+  [role="option"],
+  [role="menuitem"] {
+    cursor: pointer;
+  }
+  button:disabled,
+  select:disabled,
+  input:disabled,
+  [aria-disabled="true"] {
+    cursor: default;
+  }
+}
+
+/* Text fields get their own focus treatment (.field); everything else gets a visible ring. */
+:where(a, button, summary, [tabindex], input[type="checkbox"], input[type="radio"]):focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
   border-radius: 0.5rem;
 }
 
-/*
- * Material-style press feedback: a tonal overlay plus a slight scale.
- * In the components layer so utilities (e.g. `absolute`) override its `position`.
- * No overflow clipping: the overlay inherits the radius instead, so badges can sit outside the edge.
- */
 @layer components {
+  /*
+   * Material-style press feedback: a tonal overlay plus a slight scale.
+   * In the components layer so utilities (e.g. `absolute`) override its `position`.
+   */
   .press {
     position: relative;
     transition: transform 120ms var(--ease-standard), background-color 120ms var(--ease-standard);
@@ -128,7 +159,36 @@ body {
     transform: scale(0.98);
   }
   .press:active::after {
-    opacity: 0.12;
+    opacity: 0.08;
+  }
+
+  /* Tactile text input: pebble at rest, white with a soft emerald ring on focus. */
+  .field {
+    background: var(--surface-2);
+    border: 1px solid transparent;
+    border-radius: 1rem;
+    color: var(--fg);
+    transition: background-color 150ms var(--ease-standard), border-color 150ms var(--ease-standard),
+      box-shadow 150ms var(--ease-standard);
+  }
+  .field::placeholder {
+    color: var(--muted);
+  }
+  .field:focus,
+  .field:focus-visible {
+    background: #ffffff;
+    border-color: rgb(27 28 30 / 0.2);
+    box-shadow: 0 0 0 2px rgb(59 147 87 / 0.2);
+    outline: none;
+  }
+  .field[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  /* Pinned directly below the app bar (status bar inset + 4rem bar). */
+  .sticky-header {
+    position: sticky;
+    top: calc(env(safe-area-inset-top) + 4rem);
   }
 }
 
@@ -141,24 +201,10 @@ body {
   }
 }
 .skeleton {
-  background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 37%, var(--surface-2) 63%);
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-2-hover) 37%, var(--surface-2) 63%);
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;
-  border-radius: 0.75rem;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  .press:active {
-    transform: none;
-  }
+  border-radius: 22px;
 }
 
 @keyframes sheet-in {
@@ -208,20 +254,44 @@ body {
   display: none;
 }
 
+/* Thin, quiet scrollbar for long text areas and panels (outcome boxes in sheets). */
+.soft-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(27 28 30 / 0.25) transparent;
+}
+.soft-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.soft-scroll::-webkit-scrollbar-thumb {
+  background: rgb(27 28 30 / 0.25);
+  border-radius: 999px;
+}
+.soft-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 input[type="search"]::-webkit-search-cancel-button {
   appearance: none;
 }
-/* Pinned directly below the always-visible app bar: status bar inset + 3.5rem bar + 1px bottom border. */
-@layer components {
-  .sticky-header {
-    position: sticky;
-    top: calc(env(safe-area-inset-top) + 3.5rem + 1px);
-  }
-}
+
 /* Lead details: while the details form has unsaved changes, its Save bar takes the floating button's spot on phones. */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   /* Only while the form is expanded: collapsed, its Save bar is hidden, so the floating button comes back. */
   body:has(.lead-details-body:not([hidden]) form[data-dirty]) .log-fab {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .press:active {
+    transform: none;
   }
 }

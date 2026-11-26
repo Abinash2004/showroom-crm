@@ -16,8 +16,13 @@ interface BranchFieldProps {
   onValueChange?: (id: string) => void;
 }
 
-/** Same height as the text inputs (py-3 + 24px line + 2px border), so it lines up with the field beside it. */
-const control = "flex min-h-[3.125rem] w-full items-center gap-2 rounded-xl border bg-surface px-3 text-left text-fg";
+/**
+ * Branch picker in the branch-chip colours (Obsidian, light icon tile, name in the
+ * accent green, location underneath) with the inputs' 16px corners. Same height as the text inputs (py-3 + 24px line + 2px border),
+ * so it lines up with the field beside it.
+ */
+const control =
+  "flex min-h-[3.125rem] w-full items-center gap-2.5 rounded-2xl border bg-ink py-1 pl-1.5 pr-4 text-left text-white transition-colors";
 
 /**
  * Form field version of the branch switcher: tap opens the same branch sheet, one tap picks.
@@ -36,24 +41,32 @@ export function BranchField({ name, label, branches, defaultValue, error, onValu
 
   const content = (
     <>
-      <StoreIcon aria-hidden="true" width={18} height={18} className="shrink-0 text-muted" />
+      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/15">
+        <StoreIcon width={18} height={18} />
+      </span>
       {selected ? (
-        <CompactBranchLabel name={selected.name} location={selected.location} />
+        <CompactBranchLabel
+          name={selected.name}
+          location={selected.location}
+          nameClassName="text-[var(--accent-on-ink)] lg:shrink-0"
+          // Phones/tablets: location under the name. Desktop: on the same line, to the right.
+          className="lg:flex-row lg:items-baseline lg:gap-2"
+        />
       ) : (
-        <span className="truncate text-base text-muted">Select</span>
+        <span className="truncate text-sm font-medium text-zinc-300">Select branch</span>
       )}
     </>
   );
 
   return (
     <div className="space-y-1.5">
-      <span id={labelId} className="block text-sm font-medium">
+      <span id={labelId} className="block text-[13px] font-semibold">
         {label}
         <span className="text-danger"> *</span>
       </span>
       <input type="hidden" name={name} value={value} />
       {only ? (
-        <div aria-labelledby={labelId} role="group" className={cn(control, "border-line bg-surface-2")}>
+        <div aria-labelledby={labelId} role="group" className={cn(control, "border-transparent")}>
           {content}
         </div>
       ) : (
@@ -72,7 +85,7 @@ export function BranchField({ name, label, branches, defaultValue, error, onValu
               aria-haspopup="dialog"
               aria-labelledby={`${labelId} ${valueId}`}
               aria-describedby={message ? errorId : undefined}
-              className={cn("press", control, message ? "border-danger" : "border-line")}
+              className={cn("press hover:bg-ink/90", control, message ? "border-danger ring-2 ring-danger/30" : "border-transparent")}
             >
               {content}
               <span id={valueId} className="sr-only">{selected ? `${selected.name}, ${selected.location}. Change branch` : "Select branch"}</span>

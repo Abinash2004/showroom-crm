@@ -33,3 +33,15 @@ export function describeDevice(ua: string): DeviceInfo {
   const label = browser && system ? `${browser} on ${system}` : (browser ?? system ?? "Unknown device");
   return { label, kind: tablet ? "tablet" : phone ? "phone" : "desktop" };
 }
+
+/**
+ * Readable client address: loopback becomes "This computer", IPv4-mapped IPv6 ("::ffff:1.2.3.4") is
+ * shown as plain IPv4, and a missing address as "Unknown network".
+ */
+export function describeIp(ip: string): string {
+  const raw = ip.trim();
+  if (!raw || raw === "unknown") return "Unknown network";
+  if (raw === "::1" || raw === "127.0.0.1" || raw === "::ffff:127.0.0.1") return "This computer";
+  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(raw);
+  return mapped?.[1] ?? raw;
+}

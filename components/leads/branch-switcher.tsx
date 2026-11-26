@@ -7,7 +7,6 @@ import { cn } from "@/lib/cn";
 import { buildHref } from "@/lib/url";
 import { BranchListSheet, CompactBranchLabel } from "./branch-list-sheet";
 import type { BranchOption } from "./branch-list-sheet";
-import { chipClass } from "./chip-link";
 
 export type { BranchOption } from "./branch-list-sheet";
 
@@ -53,17 +52,27 @@ export function BranchSwitcher({ branches, selectedId, base, path = "/leads", cl
           type="button"
           aria-label={`Branch: ${selected ? `${selected.name}, ${selected.location}` : "All branches"}. Change branch`}
           aria-haspopup="dialog"
-          className={cn(chipClass(Boolean(selected)), "gap-2 pl-3", className)}
-        >
-          {pending ? (
-            <Spinner aria-hidden="true" width={18} height={18} className="shrink-0" />
-          ) : (
-            <StoreIcon aria-hidden="true" width={18} height={18} className="shrink-0" />
+          className={cn(
+            // Always in the selected (Obsidian) style: the branch scope is always set, "All branches" included.
+            "press flex min-h-12 max-w-full items-center gap-2.5 rounded-full bg-ink py-1.5 pl-1.5 pr-3.5 text-left text-white transition-colors hover:bg-ink/90",
+            className,
           )}
+        >
+          <span
+            aria-hidden="true"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/15"
+          >
+            {pending ? <Spinner width={18} height={18} /> : <StoreIcon width={18} height={18} />}
+          </span>
           {selected ? (
-            <CompactBranchLabel name={selected.name} location={selected.location} className="max-w-52" />
+            <CompactBranchLabel name={selected.name} location={selected.location} className="min-w-0" nameClassName="text-[var(--accent-on-ink)]" />
           ) : (
-            <CompactBranchLabel name="All branches" location={`${branches.length} locations`} className="max-w-52" />
+            <CompactBranchLabel
+              name="All branches"
+              location={`${branches.length} locations`}
+              className="min-w-0"
+              nameClassName="text-[var(--accent-on-ink)]"
+            />
           )}
         </button>
       }

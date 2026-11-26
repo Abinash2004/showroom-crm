@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AppBar } from "@/components/layout/app-bar";
 import { PageBody } from "@/components/layout/page";
-import { ChevronRightIcon, ListIcon, ShieldIcon, StoreIcon, UserIcon } from "@/components/icons";
+import { ActivityIcon, ShieldIcon, StoreIcon, UserIcon } from "@/components/icons";
 import { requireAdminPage } from "@/lib/auth/session";
 import { adminOverview } from "@/lib/db/repositories/admin";
 import { cn } from "@/lib/cn";
@@ -12,11 +12,12 @@ export const runtime = "nodejs";
 
 type Tone = "neutral" | "warn" | "danger" | "success";
 
+/** Same capsule style as the lead status tags: the tone's colour as text on a 12% tint of it. */
 const TONES: Record<Tone, string> = {
-  neutral: "bg-neutral-soft text-on-neutral-soft",
-  warn: "bg-warn-soft text-on-warn-soft",
-  danger: "bg-danger-soft text-on-danger-soft",
-  success: "bg-success-soft text-on-success-soft",
+  neutral: "bg-surface text-muted",
+  warn: "bg-status-opened/12 text-status-opened",
+  danger: "bg-status-rejected/12 text-status-rejected",
+  success: "bg-status-purchased/12 text-status-purchased",
 };
 
 interface Tag {
@@ -29,38 +30,58 @@ interface HubCardProps {
   title: string;
   text: string;
   icon: React.ReactNode;
-  /** Headline number and what it counts, e.g. 3 / "active of 4". */
+  /** Headline number, shown in the dark chip with its unit, e.g. 2 + "active". */
   value: number;
   unit: string;
+  /** Secondary context in the footer, e.g. "of 4 total". */
+  detail?: string;
   tags?: Tag[];
 }
 
-function HubCard({ href, title, text, icon, value, unit, tags = [] }: HubCardProps) {
+/**
+ * Admin hub card, same layout as the lead and follow-up cards:
+ *   1. title with any attention tags on the right,
+ *   2. what the section is for,
+ *   3. footer with context on the left and the key number in a dark chip on the right.
+ * The whole card is one link.
+ */
+function HubCard({ href, title, text, icon, value, unit, detail, tags = [] }: HubCardProps) {
   return (
     <li className="min-w-0">
-      <Link href={href} className="press flex h-full min-h-12 flex-col gap-3 rounded-card bg-surface p-4 shadow-card">
-        <div className="flex items-center gap-3">
-          <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-on-primary-soft">
-            {icon}
-          </span>
-          <h3 className="min-w-0 flex-1 truncate text-base font-semibold">{title}</h3>
-          <ChevronRightIcon aria-hidden="true" width={20} height={20} className="shrink-0 text-muted" />
+      <Link
+        href={href}
+        className="press flex h-full min-h-12 flex-col rounded-[22px] bg-surface-2 p-4 transition-colors hover:bg-surface-2-hover"
+      >
+        {/* 1. Title + tags */}
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="flex min-w-0 items-center gap-2 text-[17px] font-semibold leading-snug">
+            <span aria-hidden="true" className="shrink-0 text-muted">
+              {icon}
+            </span>
+            <span className="truncate">{title}</span>
+          </h3>
+          {tags.length > 0 ? (
+            <div className="flex max-w-[60%] flex-wrap justify-end gap-1.5">
+              {tags.map((t) => (
+                <span key={t.label} className={cn("rounded-full px-2.5 py-1 text-xs font-semibold leading-4 tabular-nums", TONES[t.tone])}>
+                  {t.label}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </div>
-        <p className="flex items-baseline gap-1.5">
-          <span className="text-3xl font-semibold tabular-nums leading-none">{value}</span>
-          <span className="text-sm text-muted">{unit}</span>
-        </p>
-        <p className="text-sm text-muted">{text}</p>
-        {/* Pushed to the bottom so cards in a row line up even when only some have tags. */}
-        {tags.length > 0 ? (
-          <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
-            {tags.map((t) => (
-              <span key={t.label} className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", TONES[t.tone])}>
-                {t.label}
-              </span>
-            ))}
-          </div>
-        ) : null}
+
+        {/* 2. Purpose */}
+        <p className="mt-1 text-sm leading-relaxed text-fg/80">{text}</p>
+
+        {/* 3. Context + key number */}
+        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+          <p className="min-w-0 truncate text-xs text-muted tabular-nums">{detail}</p>
+          <span className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-ink px-3.5 text-xs font-semibold leading-4 tabular-nums text-white">
+            <span className="text-[var(--accent-on-ink)]">{value}</span>
+            <span className="font-medium text-zinc-300">{unit}</span>
+          </span>
+        </div>
       </Link>
     </li>
   );
@@ -69,10 +90,10 @@ function HubCard({ href, title, text, icon, value, unit, tags = [] }: HubCardPro
 function Group({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section aria-labelledby={id} className="space-y-3">
-      <h2 id={id} className="px-1 text-xs font-semibold uppercase tracking-wider text-muted">
+      <h2 id={id} className="px-1 text-[15px] font-semibold text-muted">
         {title}
       </h2>
-      <ul className="grid gap-3 md:grid-cols-2">{children}</ul>
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">{children}</ul>
     </section>
   );
 }
@@ -80,7 +101,6 @@ function Group({ id, title, children }: { id: string; title: string; children: R
 export default async function AdminPage() {
   const actor = await requireAdminPage();
   const o = await adminOverview(actor);
-  const inactiveBranches = o.branches.total - o.branches.active;
   const inactiveUsers = o.users.total - o.users.active;
 
   const userTags: Tag[] = [];
@@ -91,24 +111,25 @@ export default async function AdminPage() {
   return (
     <>
       <AppBar title="Admin" />
-      <PageBody className="space-y-6">
+      <PageBody wide className="space-y-6">
         <Group id="org-heading" title="Organization">
           <HubCard
             href="/admin/branches"
             title="Branches"
             text="Create showroom locations and switch them on or off."
-            icon={<StoreIcon width={22} height={22} />}
+            icon={<StoreIcon width={18} height={18} />}
             value={o.branches.active}
-            unit={`active of ${o.branches.total}`}
-            tags={inactiveBranches > 0 ? [{ label: `${inactiveBranches} inactive`, tone: "neutral" }] : []}
+            unit="active"
+            detail={`${o.branches.total} ${o.branches.total === 1 ? "branch" : "branches"} in total`}
           />
           <HubCard
             href="/admin/users"
             title="Users"
             text="Register employees, assign branches and deactivate access."
-            icon={<UserIcon width={22} height={22} />}
+            icon={<UserIcon width={18} height={18} />}
             value={o.users.active}
-            unit={`active of ${o.users.total}`}
+            unit="active"
+            detail={`${o.users.total} ${o.users.total === 1 ? "user" : "users"} in total`}
             tags={userTags}
           />
         </Group>
@@ -118,18 +139,20 @@ export default async function AdminPage() {
             href="/admin/sessions"
             title="Active sessions"
             text="Who is signed in right now. Sessions end at midnight."
-            icon={<ShieldIcon width={22} height={22} />}
+            icon={<ShieldIcon width={18} height={18} />}
             value={o.sessions.active}
-            unit="signed in now"
+            unit="signed in"
+            detail="Signed out automatically at midnight"
             tags={o.sessions.active > 0 ? [{ label: "Live", tone: "success" }] : []}
           />
           <HubCard
             href="/admin/activity"
             title="Activity log"
             text="Every change with who made it, when and from which IP."
-            icon={<ListIcon width={22} height={22} />}
+            icon={<ActivityIcon width={18} height={18} />}
             value={o.activity.today}
-            unit={o.activity.today === 1 ? "change today" : "changes today"}
+            unit="today"
+            detail={o.activity.today === 1 ? "1 change since midnight" : `${o.activity.today} changes since midnight`}
           />
         </Group>
       </PageBody>

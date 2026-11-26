@@ -75,3 +75,18 @@ export const CheckIcon = (p: SVGProps<SVGSVGElement>) => (
 export const PinIcon = (p: SVGProps<SVGSVGElement>) => (
   <Icon {...p}><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" /><circle cx="12" cy="10" r="2.5" /></Icon>
 );
+export const DotIcon = (p: SVGProps<SVGSVGElement>) => (
+  <Icon {...p} fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5" /></Icon>
+);
+export const LogOutIcon = (p: SVGProps<SVGSVGElement>) => (
+  <Icon {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></Icon>
+);
+export const EyeIcon = (p: SVGProps<SVGSVGElement>) => (
+  <Icon {...p}><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></Icon>
+);
+export const EyeOffIcon = (p: SVGProps<SVGSVGElement>) => (
+  <Icon {...p}><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.2M6.6 6.6C3.7 8.4 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20" /></Icon>
+);
+export const ActivityIcon = (p: SVGProps<SVGSVGElement>) => (
+  <Icon {...p}><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></Icon>
+);

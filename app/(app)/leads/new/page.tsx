@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AppBar } from "@/components/layout/app-bar";
 import { PageBody } from "@/components/layout/page";
 import { LeadForm } from "@/components/leads/lead-form";
-import { EmptyState } from "@/components/ui/card";
+import { EmptyState, Panel } from "@/components/ui/card";
 import { requireActor } from "@/lib/auth/session";
 import { listBranches } from "@/lib/db/repositories/branches";
 import { todayInputDate } from "@/lib/format";
@@ -19,7 +19,9 @@ export default async function NewLeadPage() {
         {branches.length === 0 ? (
           <EmptyState title="No active branch available">Ask an administrator to assign you to an active branch.</EmptyState>
         ) : (
-          <LeadForm branches={branches} today={todayInputDate()} />
+          <Panel className="mx-auto max-w-2xl">
+            <LeadForm branches={branches} today={todayInputDate()} />
+          </Panel>
         )}
       </PageBody>
     </>

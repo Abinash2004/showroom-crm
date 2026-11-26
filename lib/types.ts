@@ -63,6 +63,12 @@ export interface InteractionDTO {
 
 export interface InteractionReportRow extends InteractionDTO {
   customerName: string;
+  /** Location of the lead's branch (shown next to the branch name). */
+  branchLocation: string;
+  /** 1-based position of this follow-up in its lead's history (oldest first, by date then creation). */
+  sequence: number;
+  /** Number of follow-ups the lead has in total. */
+  sequenceTotal: number;
   branchId: string;
   branchName: string;
 }
@@ -71,6 +77,8 @@ export interface ActivityDTO {
   id: string;
   entity: ActivityEntity;
   entityId: string;
+  /** Readable name of the record the entry is about (branch / user name, the lead's customer). */
+  subject: string;
   action: ActivityAction;
   changes: Record<string, { from: Json; to: Json }>;
   actionBy: string;

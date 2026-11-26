@@ -15,30 +15,49 @@ export interface BranchOption {
 /** Show a search box in the sheet only when the list is long enough to need it. */
 const SEARCH_THRESHOLD = 7;
 
-export function BranchLabel({ name, location, inactive }: { name: string; location?: string; inactive?: boolean }) {
+function BranchLabel({
+  name,
+  location,
+  inactive,
+  selected,
+}: {
+  name: string;
+  location?: string;
+  inactive?: boolean;
+  selected: boolean;
+}) {
+  // One line on every screen size: name, then location to its right, then the inactive note.
   return (
-    <span className="min-w-0 flex-1 text-left">
-      <span className="flex items-center gap-2">
-        <span className="truncate text-base font-semibold">{name}</span>
-        {inactive ? (
-          <span className="shrink-0 rounded-full bg-neutral-soft px-2 py-0.5 text-[11px] font-semibold text-on-neutral-soft">Inactive</span>
-        ) : null}
-      </span>
+    <span className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+      <span className={cn("min-w-0 shrink truncate text-base font-semibold", selected && "text-[var(--accent-on-ink)]")}>{name}</span>
       {location ? (
-        <span className="mt-0.5 flex items-center gap-1 text-sm text-muted">
-          <PinIcon width={14} height={14} className="shrink-0" />
+        <span className={cn("flex min-w-0 shrink-[2] items-center gap-1 text-sm", selected ? "text-zinc-300" : "text-muted")}>
+          <PinIcon aria-hidden="true" width={14} height={14} className="shrink-0" />
           <span className="truncate">{location}</span>
         </span>
+      ) : null}
+      {inactive ? (
+        <span className={cn("shrink-0 text-[11px] font-semibold", selected ? "text-zinc-300" : "text-muted")}>· Inactive</span>
       ) : null}
     </span>
   );
 }
 
 /** Compact two-line label: name on top, location below. Fits a 48px control. */
-export function CompactBranchLabel({ name, location, className }: { name: string; location: string; className?: string }) {
+export function CompactBranchLabel({
+  name,
+  location,
+  className,
+  nameClassName,
+}: {
+  name: string;
+  location: string;
+  className?: string;
+  nameClassName?: string;
+}) {
   return (
     <span className={cn("flex min-w-0 flex-col text-left leading-tight", className)}>
-      <span className="truncate text-sm font-semibold">{name}</span>
+      <span className={cn("truncate text-sm font-semibold", nameClassName)}>{name}</span>
       <span className="truncate text-xs opacity-75">{location}</span>
     </span>
   );
@@ -77,8 +96,9 @@ export function BranchListSheet({ branches, selectedId, allowAll = false, onSele
 
   const rowClass = (active: boolean) =>
     cn(
-      "press flex min-h-16 w-full items-center gap-3 rounded-2xl px-3 py-2 text-left",
-      active ? "bg-primary-soft text-on-primary-soft" : "text-fg",
+      // Same language as the chips: pebble tile at rest, Obsidian when selected (name in the accent green).
+      "press flex min-h-16 w-full items-center gap-3 rounded-[22px] px-3 py-2.5 text-left transition-colors",
+      active ? "bg-ink text-white" : "bg-surface-2 text-fg hover:bg-surface-2-hover",
     );
 
   return (
@@ -109,20 +129,26 @@ export function BranchListSheet({ branches, selectedId, allowAll = false, onSele
               placeholder="Find branch or location"
               autoComplete="off"
               enterKeyHint="search"
-              className="min-h-12 w-full rounded-full border border-line bg-surface pl-12 pr-4 text-base placeholder:text-muted"
+              className="field min-h-12 w-full rounded-full pl-12 pr-4 text-base"
             />
           </div>
         ) : null}
 
-        <ul className="space-y-1" aria-label="Branches">
+        <ul className="space-y-2" aria-label="Branches">
           {allowAll && !query.trim() ? (
             <li>
               <button type="button" aria-pressed={!selectedId} onClick={() => choose(undefined)} className={rowClass(!selectedId)}>
-                <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2 text-fg">
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "flex size-10 shrink-0 items-center justify-center rounded-full",
+                    !selectedId ? "bg-white/15 text-white" : "bg-surface text-fg",
+                  )}
+                >
                   <StoreIcon width={20} height={20} />
                 </span>
-                <BranchLabel name="All branches" location={`${branches.length} branches`} />
-                {!selectedId ? <CheckIcon aria-hidden="true" width={20} height={20} className="shrink-0" /> : null}
+                <BranchLabel name="All branches" location={`${branches.length} branches`} selected={!selectedId} />
+                {!selectedId ? <CheckIcon aria-hidden="true" width={20} height={20} className="shrink-0 text-[var(--accent-on-ink)]" /> : null}
               </button>
             </li>
           ) : null}
@@ -135,13 +161,13 @@ export function BranchListSheet({ branches, selectedId, allowAll = false, onSele
                     aria-hidden="true"
                     className={cn(
                       "flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold",
-                      active ? "bg-primary text-on-primary" : "bg-surface-2 text-fg",
+                      active ? "bg-white/15 text-white" : "bg-surface text-fg",
                     )}
                   >
                     {b.name.trim().charAt(0).toUpperCase()}
                   </span>
-                  <BranchLabel name={b.name} location={b.location} inactive={!b.isActive} />
-                  {active ? <CheckIcon aria-hidden="true" width={20} height={20} className="shrink-0" /> : null}
+                  <BranchLabel name={b.name} location={b.location} inactive={!b.isActive} selected={active} />
+                  {active ? <CheckIcon aria-hidden="true" width={20} height={20} className="shrink-0 text-[var(--accent-on-ink)]" /> : null}
                 </button>
               </li>
             );

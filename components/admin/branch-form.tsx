@@ -14,6 +14,14 @@ interface BranchFormProps {
   onSaved: () => void;
 }
 
+/** Paired fields share a row 50/50; min-w-0 lets the narrow columns shrink below their content width. */
+const ROW = "grid grid-cols-2 items-start gap-3 [&>*]:min-w-0";
+
+/**
+ * Create: [code | phone], name, location.
+ * Edit: name, [location | phone]. The code can't change, so it is shown in the sheet header instead of
+ * as a read-only field (the update schema doesn't take it).
+ */
 export function BranchForm({ branch, onSaved }: BranchFormProps) {
   const form = useActionForm(branch ? branchUpdateSchema : branchCreateSchema, (fd) =>
     branch ? updateBranchAction(branch.id, fd) : createBranchAction(fd),
@@ -23,54 +31,72 @@ export function BranchForm({ branch, onSaved }: BranchFormProps) {
     if (form.successCount > 0) onSaved();
   }, [form.successCount, onSaved]);
 
+  const name = (
+    <TextField
+      label="Name"
+      name="name"
+      required
+      autoComplete="off"
+      placeholder="e.g. Yamaha"
+      defaultValue={form.value("name", branch?.name ?? "")}
+      error={form.fieldError("name")}
+    />
+  );
+  const location = (
+    <TextField
+      label="Location"
+      name="location"
+      required
+      autoComplete="off"
+      placeholder="Area, city"
+      defaultValue={form.value("location", branch?.location ?? "")}
+      error={form.fieldError("location")}
+    />
+  );
+  const phone = (
+    <TextField
+      label="Phone"
+      name="phone"
+      type="tel"
+      inputMode="numeric"
+      autoComplete="off"
+      placeholder="10 digits"
+      required
+      defaultValue={form.value("phone", branch?.phone ?? "")}
+      error={form.fieldError("phone")}
+    />
+  );
+
   return (
     <form action={form.formAction} noValidate className="space-y-4">
       <FormError error={form.error} />
-      <div className="grid grid-cols-2 items-start gap-3 [&>*]:min-w-0">
-        {branch ? (
-          <TextField label="Branch code" name="code" defaultValue={branch.code} readOnly hint="Can't be changed." />
-        ) : (
-          <TextField
-            label="Branch code"
-            name="code"
-            required
-            autoCapitalize="characters"
-            autoComplete="off"
-            placeholder="e.g. HQ"
-            defaultValue={form.value("code")}
-            error={form.fieldError("code")}
-          />
-        )}
-        <TextField
-          label="Phone"
-          name="phone"
-          type="tel"
-          inputMode="numeric"
-          autoComplete="off"
-          placeholder="10 digits"
-          required
-          defaultValue={form.value("phone", branch?.phone ?? "")}
-          error={form.fieldError("phone")}
-        />
-      </div>
-      <TextField
-        label="Name"
-        name="name"
-        required
-        autoComplete="off"
-        placeholder="e.g. Central Showroom"
-        defaultValue={form.value("name", branch?.name ?? "")}
-        error={form.fieldError("name")}
-      />
-      <TextField
-        label="Location"
-        name="location"
-        required
-        autoComplete="off"
-        placeholder="Area, city"
-        defaultValue={form.value("location", branch?.location ?? "")}
-        error={form.fieldError("location")}
-      />
+      {branch ? (
+        <>
+          {name}
+          <div className={ROW}>
+            {location}
+            {phone}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className={ROW}>
+            <TextField
+              label="Branch code"
+              name="code"
+              required
+              autoCapitalize="characters"
+              autoComplete="off"
+              placeholder="e.g. B-01"
+              defaultValue={form.value("code")}
+              error={form.fieldError("code")}
+            />
+            {phone}
+          </div>
+          {name}
+          {location}
+        </>
+      )}
       <Button type="submit" className="w-full" disabled={form.pending}>
         {form.pending ? "Saving..." : branch ? "Save changes" : "Create branch"}
       </Button>

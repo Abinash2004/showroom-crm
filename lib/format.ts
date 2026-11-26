@@ -29,3 +29,19 @@ export function formatAgo(iso: string, nowMs: number): string {
   if (minutes < 24 * 60) return `${Math.floor(minutes / 60)} h ago`;
   return formatDateTime(iso);
 }
+
+/** 1 -> "1st", 2 -> "2nd", 3 -> "3rd", 11 -> "11th", 22 -> "22nd". */
+export function ordinal(n: number): string {
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  const suffix = ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[n % 10] ?? "th";
+  return `${n}${suffix}`;
+}
+
+/** "Abinash Parida" -> "AP", "Ayushi" -> "A". Pure, so server and client components can both use it. */
+export function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.charAt(0) ?? "";
+  const last = parts.length > 1 ? (parts[parts.length - 1]?.charAt(0) ?? "") : "";
+  return (first + last).toUpperCase() || "?";
+}

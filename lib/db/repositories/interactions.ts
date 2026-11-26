@@ -1,9 +1,9 @@
 import "server-only";
 import type { Types } from "mongoose";
 import { connectDb } from "../connection";
-import { InteractionModel, LeadModel, UserModel } from "../models";
+import { BranchModel, InteractionModel, LeadModel, UserModel } from "../models";
 import { branchScope, canAccessBranch, dateRange, iso, oid, pageWindow } from "../helpers";
-import { branchNameMap, customerSearchFilter } from "./leads";
+import { customerSearchFilter } from "./leads";
 import { logActivity } from "../activity";
 import { AppError } from "@/lib/errors";
 import { computeChanges, creationChanges } from "@/lib/diff";
@@ -108,6 +108,54 @@ interface ReportRow extends LeanInteraction {
   lead: { customerName: string; branchId: Types.ObjectId };
 }
 
+/** Branch name + location for a page of rows: one `$in` query, hash-map lookups per row (O(1)). */
+async function branchInfoMap(branchIds: Types.ObjectId[]): Promise<Map<string, { name: string; location: string }>> {
+  const unique = [...new Map(branchIds.map((b) => [b.toHexString(), b])).values()];
+  const rows = await BranchModel.find({ _id: { $in: unique } }, { name: 1, location: 1 }).lean<
+    { _id: Types.ObjectId; name: string; location: string }[]
+  >();
+  return new Map(rows.map((r) => [r._id.toHexString(), { name: r.name, location: r.location }]));
+}
+
+/**
+ * Position of each row within its lead's follow-ups ("2nd of 3"), ordered by date then _id.
+ * One aggregation for the whole page; each lookup is an equality on leadId, served by the
+ * { leadId, date, _id } index. Cost: O(page size x follow-ups per lead).
+ */
+async function sequenceMap(rows: LeanInteraction[]): Promise<Map<string, { n: number; total: number }>> {
+  if (rows.length === 0) return new Map();
+  const out = await InteractionModel.aggregate<{ _id: Types.ObjectId; pos: { n: number; total: number } | null }>([
+    { $match: { _id: { $in: rows.map((r) => r._id) } } },
+    {
+      $lookup: {
+        from: InteractionModel.collection.name,
+        let: { lead: "$leadId", d: "$date", id: "$_id" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$leadId", "$$lead"] } } },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: 1 },
+              n: {
+                $sum: {
+                  $cond: [
+                    { $or: [{ $lt: ["$date", "$$d"] }, { $and: [{ $eq: ["$date", "$$d"] }, { $lte: ["$_id", "$$id"] }] }] },
+                    1,
+                    0,
+                  ],
+                },
+              },
+            },
+          },
+        ],
+        as: "pos",
+      },
+    },
+    { $project: { pos: { $first: "$pos" } } },
+  ]);
+  return new Map(out.map((o) => [o._id.toHexString(), { n: o.pos?.n ?? 1, total: o.pos?.total ?? 1 }]));
+}
+
 /** Interaction report across the actor's branches. Branch scope is applied on the joined lead. */
 export async function interactionReport(actor: Actor, filters: InteractionFilters): Promise<Page<InteractionReportRow>> {
   await connectDb();
@@ -146,9 +194,10 @@ export async function interactionReport(actor: Actor, filters: InteractionFilter
   const rows = result?.rows ?? [];
   const total = result?.total[0]?.n ?? 0;
 
-  const [users, branches] = await Promise.all([
+  const [users, branches, positions] = await Promise.all([
     userNameMap(rows.map((r) => r.actionBy)),
-    branchNameMap(rows.map((r) => r.lead.branchId)),
+    branchInfoMap(rows.map((r) => r.lead.branchId)),
+    sequenceMap(rows),
   ]);
   return {
     total,
@@ -158,7 +207,10 @@ export async function interactionReport(actor: Actor, filters: InteractionFilter
       ...toDTO(r, users),
       customerName: r.lead.customerName,
       branchId: r.lead.branchId.toHexString(),
-      branchName: branches.get(r.lead.branchId.toHexString()) ?? "Unknown branch",
+      branchName: branches.get(r.lead.branchId.toHexString())?.name ?? "Unknown branch",
+      branchLocation: branches.get(r.lead.branchId.toHexString())?.location ?? "",
+      sequence: positions.get(r._id.toHexString())?.n ?? 1,
+      sequenceTotal: positions.get(r._id.toHexString())?.total ?? 1,
     })),
   };
 }

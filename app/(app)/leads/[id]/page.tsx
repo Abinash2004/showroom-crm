@@ -31,36 +31,45 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     branchOptions.unshift({ id: lead.branchId, name: lead.branchName, location: "", isActive: true });
   }
   const today = todayInputDate();
+  // A closed lead (Rejected or Purchased) needs no further follow-ups.
+  const closed = lead.status === "Rejected" || lead.status === "Purchased";
 
   return (
     <>
-      <AppBar title="Lead Information" backHref="/leads" />
+      <AppBar title="Lead Information" backHref="/leads" parent="Leads" />
       <PageBody className="space-y-5">
         <LeadEditor lead={lead} branches={branchOptions} today={today} />
 
         <section aria-labelledby="history-heading" className="space-y-3">
           <div className="flex min-h-12 items-center justify-between gap-3">
-            <h2 id="history-heading" className="flex items-center gap-2 text-base font-semibold">
+            <h2 id="history-heading" className="flex items-center gap-2 font-display text-lg font-bold">
               Interactions
-              <span className="rounded-full bg-neutral-soft px-2.5 py-0.5 text-xs font-semibold tabular-nums text-on-neutral-soft">
-                {interactions.length}
-              </span>
+              <span className="font-mono text-sm font-medium tabular-nums text-muted">{interactions.length}</span>
             </h2>
-            <LogInteractionSheet leadId={lead.id} today={today} />
+            {closed ? null : <LogInteractionSheet leadId={lead.id} today={today} />}
           </div>
           {interactions.length === 0 ? (
-            <EmptyState title="No interactions yet">Tap Log interaction after you talk to the customer.</EmptyState>
+            <EmptyState title="No interactions yet">
+              {closed ? `This lead is ${lead.status.toLowerCase()}.` : "Tap Log interaction after you talk to the customer."}
+            </EmptyState>
           ) : (
-            <ul className="grid gap-3 md:grid-cols-2">
-              {interactions.map((i) => (
-                <InteractionItem key={i.id} interaction={i} today={today} />
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {/* Listed newest first, so the newest is "N of N" and the oldest is the 1st. */}
+              {interactions.map((i, index) => (
+                <InteractionItem
+                  key={i.id}
+                  interaction={i}
+                  today={today}
+                  sequence={interactions.length - index}
+                  total={interactions.length}
+                />
               ))}
             </ul>
           )}
         </section>
 
         {/* Keeps the last card clear of the floating Log interaction button on phones. */}
-        <div aria-hidden="true" className="h-16 md:hidden" />
+        {closed ? null : <div aria-hidden="true" className="h-16 lg:hidden" />}
       </PageBody>
     </>
   );

@@ -3,7 +3,7 @@
 import { loginAction } from "@/lib/actions/auth";
 import { loginSchema } from "@/lib/validators/auth";
 import { Button } from "@/components/ui/button";
-import { FormError, TextField } from "./fields";
+import { FormError, PasswordField, TextField } from "./fields";
 import { useActionForm } from "./use-action-form";
 
 export function LoginForm() {
@@ -21,15 +21,14 @@ export function LoginForm() {
         defaultValue={form.value("phone")}
         error={form.fieldError("phone")}
       />
-      <TextField
+      <PasswordField
         label="Password"
         name="password"
-        type="password"
         autoComplete="current-password"
         required
         error={form.fieldError("password")}
       />
-      <Button type="submit" className="w-full" disabled={form.pending}>
+      <Button type="submit" variant="primary" className="w-full" disabled={form.pending}>
         {form.pending ? "Signing in..." : "Sign in"}
       </Button>
     </form>

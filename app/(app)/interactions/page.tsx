@@ -55,7 +55,7 @@ export default async function InteractionsPage({ searchParams }: { searchParams:
           label={active ? `${p.label}, active. Tap to remove` : `Follow-ups ${p.label.toLowerCase()}`}
         >
           {p.label}
-          {active ? <CloseIcon width={14} height={14} /> : null}
+          {active ? <CloseIcon width={14} height={14} className="chip-accent" /> : null}
         </ChipLink>
       </li>
     );
@@ -76,8 +76,11 @@ export default async function InteractionsPage({ searchParams }: { searchParams:
   );
 
   // Same spacing as the lead list: rows sit 10px apart, matching the 10px gap between chips.
+  // Keyed: built on the server and rendered inside the client list's sticky header next to the client's own
+  // children, where React needs a key on an element it didn't create itself.
   const filtersSection = (
-    <section aria-label="Find follow-ups">
+    <section key="filters" aria-label="Find follow-ups">
+      {/* Search and branch share one row: the branch chip is only as wide as its text (capped at 45%), search takes the rest. */}
       <div className="flex items-center gap-2.5">
         <LeadSearch
           query={filters.q ?? ""}
@@ -87,7 +90,7 @@ export default async function InteractionsPage({ searchParams }: { searchParams:
         />
         {branches.length > 1 ? (
           // Capped at 45% so the search box keeps room to type; long names truncate.
-          <div className="min-w-0 max-w-[45%]">
+          <div className="min-w-0 max-w-[45%] shrink-0">
             <BranchSwitcher
               branches={branches.map((b) => ({ id: b.id, name: b.name, location: b.location, isActive: b.isActive }))}
               selectedId={filters.branchId}
@@ -113,7 +116,7 @@ export default async function InteractionsPage({ searchParams }: { searchParams:
   return (
     <>
       <AppBar title="Follow-ups" />
-      <PageBody className="space-y-3">
+      <PageBody wide className="space-y-3">
         {result.items.length === 0 ? (
           <>
             <StickyHeader>

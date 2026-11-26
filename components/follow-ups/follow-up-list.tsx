@@ -34,7 +34,7 @@ export function FollowUpList({ initial, params, query, header, pagination }: Fol
   const sentinel = useRef<HTMLDivElement>(null);
   const busy = useRef(false);
 
-  // New server data (filter change, pull-to-refresh): start over from it.
+  // New server data (filter change, refresh button): start over from it.
   if (initial !== source) {
     setSource(initial);
     setItems(initial.items);
@@ -93,7 +93,7 @@ export function FollowUpList({ initial, params, query, header, pagination }: Fol
         </p>
       </StickyHeader>
 
-      <ul className="grid gap-3 md:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {/* From 768px up only the server page is shown, so a resize never mixes pages with the links. */}
         {items.map((item, i) => (
           <FollowUpCard key={item.id} item={item} className={i < initial.items.length ? undefined : "md:hidden"} />
@@ -104,7 +104,7 @@ export function FollowUpList({ initial, params, query, header, pagination }: Fol
         {hasMore ? (
           <div ref={sentinel} className="space-y-3" aria-busy={state === "loading"}>
             {state === "error" ? (
-              <div role="alert" className="flex items-center justify-between gap-3 rounded-card bg-danger-soft p-4 text-sm font-medium text-on-danger-soft">
+              <div role="alert" className="flex items-center justify-between gap-3 rounded-[22px] bg-danger-soft p-4 text-sm font-medium text-on-danger-soft">
                 Couldn&apos;t load more follow-ups.
                 <button type="button" onClick={() => void loadMore()} className="press min-h-12 rounded-xl bg-surface px-4 font-semibold text-fg">
                   Retry

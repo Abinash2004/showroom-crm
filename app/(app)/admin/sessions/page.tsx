@@ -2,14 +2,13 @@ import type { Metadata } from "next";
 import { AppBar } from "@/components/layout/app-bar";
 import { PageBody } from "@/components/layout/page";
 import { EmptyState } from "@/components/ui/card";
-import { Pill } from "@/components/ui/status-badge";
 import { PhoneIcon } from "@/components/icons";
 import { requireAdminPage } from "@/lib/auth/session";
 import { listActiveSessions } from "@/lib/db/repositories/users";
 import { cn } from "@/lib/cn";
-import { formatAgo, formatDateTime, formatPhone } from "@/lib/format";
+import { formatAgo, formatDateTime, formatPhone, initials } from "@/lib/format";
 import type { ActiveSessionDTO } from "@/lib/types";
-import { describeDevice } from "@/lib/user-agent";
+import { describeDevice, describeIp } from "@/lib/user-agent";
 
 export const metadata: Metadata = { title: "Active sessions" };
 export const runtime = "nodejs";
@@ -47,9 +46,10 @@ function groupByUser(sessions: ActiveSessionDTO[]): UserGroup[] {
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="rounded-card bg-surface p-4 shadow-card">
-      <p className="text-3xl font-semibold tabular-nums leading-none">{value}</p>
-      <p className="mt-1.5 text-sm text-muted">{label}</p>
+    // Card-sized dark tile: big number in the accent green, label to its right, sitting on the number's baseline.
+    <div className="flex items-end gap-3 rounded-[22px] bg-ink p-4 text-white">
+      <span className="shrink-0 text-4xl font-semibold tabular-nums leading-none tracking-tight text-[var(--accent-on-ink)]">{value}</span>
+      <span className="min-w-0 pb-0.5 text-sm leading-tight text-zinc-300">{label}</span>
     </div>
   );
 }
@@ -63,63 +63,68 @@ export default async function SessionsPage() {
 
   return (
     <>
-      <AppBar title="Active sessions" backHref="/admin" />
-      <PageBody className="space-y-4">
-        <div className="grid grid-cols-3 gap-3">
+      <AppBar title="Active sessions" backHref="/admin" parent="Admin" />
+      <PageBody wide className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
           <Stat value={groups.length} label={groups.length === 1 ? "user signed in" : "users signed in"} />
           <Stat value={activeNow} label="active now" />
-          <Stat value={sessions.length} label={sessions.length === 1 ? "device" : "devices"} />
         </div>
-        <p className="px-1 text-sm text-muted">Everyone is signed out at midnight. Deactivating a user on the Users page signs them out immediately.</p>
 
         {groups.length === 0 ? (
           <EmptyState title="Nobody is signed in">Sessions appear here as soon as someone signs in.</EmptyState>
         ) : (
-          <ul className="grid gap-3 md:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {groups.map((g) => {
               const live = now - g.lastActiveMs < ACTIVE_WINDOW_MS;
               return (
-                <li key={g.userId} className="min-w-0 rounded-card bg-surface p-4 shadow-card">
+                <li key={g.userId} className="min-w-0 rounded-[22px] bg-surface-2 p-4">
                   <div className="flex items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className="relative flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-base font-bold text-on-primary-soft"
+                      className="relative flex size-11 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-semibold text-white"
                     >
-                      {g.name.trim().charAt(0).toUpperCase()}
+                      {initials(g.name)}
                       <span
                         className={cn(
-                          "absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-surface",
-                          live ? "bg-[#22c55e]" : "bg-[var(--line)]",
+                          "absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-[var(--surface-2)]",
+                          live ? "bg-status-purchased" : "bg-muted",
                         )}
                       />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate text-base font-semibold">{g.name}</h2>
-                      <p className="text-sm text-muted">
+                      <h2 className="line-clamp-1 text-[17px] font-semibold leading-snug [overflow-wrap:anywhere]">{g.name}</h2>
+                      <p className={cn("text-sm", live ? "font-semibold text-status-purchased" : "text-muted")}>
                         {live ? "Active now" : `Last active ${formatAgo(new Date(g.lastActiveMs).toISOString(), now)}`}
                       </p>
                     </div>
                     <a
                       href={`tel:${g.phone}`}
                       aria-label={`Call ${g.name} on ${formatPhone(g.phone)}`}
-                      className="press inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-primary-soft text-on-primary-soft"
+                      className="press inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-ink text-white hover:bg-ink/90"
                     >
-                      <PhoneIcon width={20} height={20} />
+                      <PhoneIcon width={18} height={18} />
                     </a>
                   </div>
 
-                  <ul className="mt-3 divide-y divide-line rounded-xl bg-surface-2" aria-label={`${g.name}'s devices`}>
+                  <ul className="mt-3 divide-y divide-line rounded-2xl bg-surface" aria-label={`${g.name}'s devices`}>
                     {g.sessions.map((s) => {
                       const device = describeDevice(s.userAgent);
                       return (
-                        <li key={s.id} className="flex items-start justify-between gap-3 px-3 py-2.5">
+                        <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-3">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">{device.label}</p>
-                            <p className="truncate text-xs text-muted">
-                              {s.userIp} &middot; signed in {formatDateTime(s.createdAt)}
+                            <p className="truncate text-[15px] font-medium">{device.label}</p>
+                            <p className="mt-0.5 truncate text-xs tabular-nums text-muted">
+                              {describeIp(s.userIp)} &middot; Signed in {formatDateTime(s.createdAt)}
                             </p>
                           </div>
-                          <Pill tone={device.kind === "desktop" ? "neutral" : "info"}>{device.kind}</Pill>
+                          <span
+                            className={cn(
+                              "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold capitalize leading-4",
+                              device.kind === "desktop" ? "bg-surface-2 text-muted" : "bg-status-booked/12 text-status-booked",
+                            )}
+                          >
+                            {device.kind}
+                          </span>
                         </li>
                       );
                     })}

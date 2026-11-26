@@ -15,6 +15,14 @@ interface UserFormProps {
   onSaved: () => void;
 }
 
+/** Paired fields share a row 50/50; min-w-0 lets the narrow columns shrink below their content width. */
+const ROW = "grid grid-cols-2 items-start gap-3 [&>*]:min-w-0";
+
+/**
+ * Create: [employee code | phone], name, admin, branches.
+ * Edit: [name | phone], admin, branches. The code can't change, so it is shown in the sheet header
+ * instead of as a read-only field (the update schema doesn't take it).
+ */
 export function UserForm({ branches, user, onSaved }: UserFormProps) {
   const form = useActionForm(user ? userUpdateSchema : userCreateSchema, (fd) =>
     user ? updateUserAction(user.id, fd) : createUserAction(fd),
@@ -28,75 +36,102 @@ export function UserForm({ branches, user, onSaved }: UserFormProps) {
     if (form.successCount > 0) onSaved();
   }, [form.successCount, onSaved]);
 
+  const name = (
+    <TextField
+      label="Name"
+      name="name"
+      required
+      autoComplete="off"
+      placeholder="Full name"
+      defaultValue={form.value("name", user?.name ?? "")}
+      error={form.fieldError("name")}
+    />
+  );
+  const phone = (
+    <TextField
+      label="Phone"
+      name="phone"
+      type="tel"
+      inputMode="numeric"
+      autoComplete="off"
+      placeholder="10 digits"
+      required
+      defaultValue={form.value("phone", user?.phone ?? "")}
+      error={form.fieldError("phone")}
+    />
+  );
+
   return (
     <form action={form.formAction} noValidate className="space-y-4">
       <FormError error={form.error} />
-      <div className="grid grid-cols-2 items-start gap-3 [&>*]:min-w-0">
-        {user ? (
-          <TextField label="Employee code" name="code" defaultValue={user.code} readOnly hint="Can't be changed." />
-        ) : (
-          <TextField
-            label="Employee code"
-            name="code"
-            required
-            autoCapitalize="characters"
-            autoComplete="off"
-            placeholder="e.g. EMP101"
-            defaultValue={form.value("code")}
-            error={form.fieldError("code")}
-          />
-        )}
-        <TextField
-          label="Phone"
-          name="phone"
-          type="tel"
-          inputMode="numeric"
-          autoComplete="off"
-          placeholder="10 digits"
-          required
-          defaultValue={form.value("phone", user?.phone ?? "")}
-          error={form.fieldError("phone")}
-        />
-      </div>
-      {!user ? (
-        <p className="-mt-2 text-sm text-muted">Share the employee code with the user outside the app. They need it with their phone to sign up.</p>
-      ) : null}
-      <TextField
-        label="Name"
-        name="name"
-        required
-        autoComplete="off"
-        defaultValue={form.value("name", user?.name ?? "")}
-        error={form.fieldError("name")}
-      />
+      {user ? (
+        <div className={ROW}>
+          {name}
+          {phone}
+        </div>
+      ) : (
+        <>
+          <div className={ROW}>
+            <TextField
+              label="Employee code"
+              name="code"
+              required
+              autoCapitalize="characters"
+              autoComplete="off"
+              placeholder="e.g. EMP-01"
+              hint="Share it with the user to sign up."
+              defaultValue={form.value("code")}
+              error={form.fieldError("code")}
+            />
+            {phone}
+          </div>
+          {name}
+        </>
+      )}
+
       <CheckboxField
-        label="Administrator (full access to all branches)"
+        label="Administrator (all branches)"
         name="isAdmin"
         checked={isAdmin}
         onChange={(e) => setIsAdmin(e.currentTarget.checked)}
-        className="rounded-xl border border-line px-3"
       />
+
       {/* Hidden and disabled for admins: disabled controls aren't posted; ticks are kept if admin is unchecked again. */}
-      <fieldset className="min-w-0 space-y-1" hidden={isAdmin} disabled={isAdmin} aria-describedby={branchError ? "branch-error" : undefined}>
-        <legend className="mb-1 text-sm font-medium">
+      <fieldset className="min-w-0 space-y-2" hidden={isAdmin} disabled={isAdmin} aria-describedby={branchError ? "branch-error" : undefined}>
+        <legend className="mb-2 text-[13px] font-semibold">
           Assigned branches <span className="text-danger">*</span>
         </legend>
         {branches.length === 0 ? <p className="text-sm text-muted">Create a branch first.</p> : null}
-        <div className="grid gap-1 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
+          {/* Two fixed lines per option (name / location + status), each truncated, so options never wrap
+              and every tile in the grid has the same height. */}
           {branches.map((b) => (
-            <CheckboxField
+            <label
               key={b.id}
-              label={`${b.name}${b.isActive ? "" : " (inactive)"}`}
-              name="branchIds"
-              value={b.id}
-              defaultChecked={selected.has(b.id)}
-            />
+              className="flex min-h-14 cursor-pointer items-center gap-2.5 rounded-2xl bg-surface-2 px-3 py-2 sm:gap-3 sm:px-4 transition-colors hover:bg-surface-2-hover has-[:checked]:bg-ink has-[:checked]:text-white"
+            >
+              <input
+                type="checkbox"
+                name="branchIds"
+                value={b.id}
+                defaultChecked={selected.has(b.id)}
+                className="size-5 shrink-0 accent-[var(--primary)]"
+              />
+              <span className="min-w-0 flex-1 leading-tight">
+                <span className="block truncate text-[15px] font-medium">{b.name}</span>
+                <span className="mt-0.5 block truncate text-xs opacity-70">
+                  {b.location}
+                  {b.isActive ? null : " · Inactive"}
+                </span>
+              </span>
+            </label>
           ))}
         </div>
         <p id="branch-error" role={branchError ? "alert" : undefined} className={branchError ? "text-sm font-medium text-danger" : "hidden"}>
           {branchError}
         </p>
       </fieldset>
+
       <Button type="submit" className="w-full" disabled={form.pending}>
         {form.pending ? "Saving..." : user ? "Save changes" : "Create user"}
       </Button>

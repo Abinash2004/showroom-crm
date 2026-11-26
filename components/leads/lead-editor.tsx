@@ -8,7 +8,6 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { FormError, TextAreaField, TextField } from "@/components/forms/fields";
 import { useActionForm } from "@/components/forms/use-action-form";
-import { CHIP_ITEM, CHIP_LIST, CHIP_SCROLLER } from "@/lib/chip-classes";
 import { cn } from "@/lib/cn";
 import { LEAD_STATUSES } from "@/lib/constants";
 import { formatPhone, toInputDate } from "@/lib/format";
@@ -16,7 +15,6 @@ import type { LeadDTO } from "@/lib/types";
 import { leadEditSchema } from "@/lib/validators/entities";
 import { BranchField } from "./branch-field";
 import type { BranchOption } from "./branch-list-sheet";
-import { chipClass } from "./chip-link";
 
 type Snapshot = Record<string, string>;
 
@@ -49,7 +47,7 @@ function countChanges(form: HTMLFormElement, saved: Snapshot): number {
 
 const phoneDigits = (v: string) => v.replace(/[\s-]/g, "");
 
-/** Phone input with a call button inside it. Calls whatever is typed once it is a full 10-digit number. */
+/** Phone input with a 44px call button beside it. Calls whatever is typed once it is a full 10-digit number. */
 function PhoneInput({
   label,
   name,
@@ -72,37 +70,34 @@ function PhoneInput({
   const callable = /^\d{10}$/.test(digits);
   return (
     <div className="min-w-0 space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium">
+      <label htmlFor={id} className="block text-[13px] font-semibold">
         {label}
         {required ? <span className="text-danger"> *</span> : null}
       </label>
-      <div className="relative">
+      <div className="flex items-center gap-2">
         <input
           id={id}
           name={name}
           type="tel"
           inputMode="numeric"
           autoComplete="off"
-          placeholder="10 digits"
+          placeholder={required ? "10 digits" : "Optional"}
           defaultValue={defaultValue}
           onInput={(e) => setValue(e.currentTarget.value)}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
-          className={cn(
-            "min-h-12 w-full rounded-xl border bg-surface py-3 pl-3 pr-12 text-base tabular-nums text-fg placeholder:text-muted",
-            error ? "border-danger" : "border-line",
-          )}
+          className="field min-h-12 w-full min-w-0 flex-1 px-4 py-3 font-mono text-[15px] tabular-nums"
         />
         {callable ? (
           <a
             href={`tel:${digits}`}
             aria-label={`Call ${customer} on ${formatPhone(digits)}`}
-            className="press absolute right-1 top-1/2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-lg bg-primary-soft text-on-primary-soft"
+            className="press inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-ink text-white hover:bg-ink/90"
           >
             <PhoneIcon width={18} height={18} />
           </a>
         ) : (
-          <span aria-hidden="true" className="pointer-events-none absolute right-1 top-1/2 inline-flex size-10 -translate-y-1/2 items-center justify-center text-muted opacity-40">
+          <span aria-hidden="true" className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted opacity-60">
             <PhoneIcon width={18} height={18} />
           </span>
         )}
@@ -171,25 +166,21 @@ function EditorForm({ lead, branches, today, onDiscard, onSaved, onDirtyChange }
       {/* min-w-0: a fieldset's default min-width is its content's, which let the chip row stretch the whole card. */}
       <fieldset className="min-w-0">
         <legend className="sr-only">Status</legend>
-        <div className={CHIP_SCROLLER}>
-          <ul className={CHIP_LIST}>
-            {LEAD_STATUSES.map((s) => (
-              <li key={s} className={CHIP_ITEM}>
-                <label
-                  className={cn(
-                    chipClass(false, "solid"),
-                    "cursor-pointer gap-1.5",
-                    "has-[:checked]:border-transparent has-[:checked]:bg-primary has-[:checked]:text-on-primary",
-                    "has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--focus)]",
-                  )}
-                >
-                  <input type="radio" name="status" value={s} defaultChecked={status === s} className="peer sr-only" />
-                  <CheckIcon aria-hidden="true" width={16} height={16} className="hidden peer-checked:block" />
-                  {s}
-                </label>
-              </li>
-            ))}
-          </ul>
+        {/* 4-option segmented control: always one row, the selected option in Obsidian. */}
+        <div className="grid grid-cols-4 gap-1.5">
+          {LEAD_STATUSES.map((s) => (
+            <label
+              key={s}
+              className={cn(
+                "press flex min-h-11 min-w-0 cursor-pointer items-center justify-center gap-1 rounded-full bg-surface-2 px-1 text-[13px] font-medium transition-colors hover:bg-surface-2-hover sm:text-sm",
+                "has-[:checked]:bg-ink has-[:checked]:font-semibold has-[:checked]:text-white",
+                "has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--focus)]",
+              )}
+            >
+              <input type="radio" name="status" value={s} defaultChecked={status === s} className="peer sr-only" />
+              <span className="truncate">{s}</span>
+            </label>
+          ))}
         </div>
       </fieldset>
 
@@ -259,14 +250,14 @@ function EditorForm({ lead, branches, today, onDiscard, onSaved, onDirtyChange }
       {/* Appears only while something differs from the saved lead; sticks above the bottom navigation on phones. */}
       {dirty ? (
         <div
-          className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] z-20 -mx-2 flex items-center gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sheet md:bottom-4"
+          className="sticky bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 -mx-1 flex items-center gap-2 rounded-full bg-ink p-1.5 text-white shadow-[var(--shadow-dock)] lg:bottom-4"
           role="region"
           aria-label="Unsaved changes"
         >
-          <p className="min-w-0 flex-1 truncate pl-2 text-sm font-medium" aria-live="polite">
+          <p className="min-w-0 flex-1 truncate pl-3 font-mono text-sm tabular-nums" aria-live="polite">
             {changes} {changes === 1 ? "change" : "changes"}
           </p>
-          <Button variant="outline" onClick={onDiscard} disabled={form.pending}>
+          <Button variant="ghost" onClick={onDiscard} disabled={form.pending} className="text-zinc-300 hover:bg-white/10 hover:text-white">
             Discard
           </Button>
           <Button type="submit" disabled={form.pending}>
@@ -329,42 +320,39 @@ export function LeadEditor({ lead, branches, today }: LeadEditorProps) {
   const onDiscard = useCallback(() => setDiscards((n) => n + 1), []);
 
   return (
-    <section aria-labelledby="details-heading" className="rounded-card bg-surface shadow-card">
-      <h2 id="details-heading" className="text-base font-semibold">
+    <section aria-labelledby="details-heading" className="rounded-[28px] bg-surface shadow-sheet">
+      <h2 id="details-heading" className="font-display text-base font-bold">
         <button
           type="button"
           aria-expanded={!collapsed}
           aria-controls={bodyId}
           onClick={() => collapsePreference.set(!collapsed)}
-          className="press flex min-h-14 w-full items-center gap-3 rounded-card px-4 py-2 text-left"
+          className="press flex min-h-16 w-full items-center gap-3 rounded-[28px] px-5 py-3 text-left"
         >
-          <span className="min-w-0 flex-1">
-            <span className="block">Customer details</span>
-            {/* Collapsed: a one-line summary so it's still clear whose lead this is. */}
-            {collapsed ? (
-              <span className="mt-0.5 flex min-w-0 items-center gap-2 text-sm font-normal text-muted">
-                <span className="truncate">{lead.customerName}</span>
-                <StatusBadge status={lead.status} className="shrink-0" />
-              </span>
-            ) : null}
+          {/* Expanded: just the title (the form shows name and status). Collapsed: title + status tag. */}
+          <span className="flex min-w-0 flex-1 items-center gap-2.5">
+            <span className="truncate text-[17px] font-semibold leading-snug">Customer Details</span>
+            {collapsed ? <StatusBadge status={lead.status} className="shrink-0" /> : null}
           </span>
           {justSaved ? (
-            <span role="status" className="flex shrink-0 items-center gap-1 text-sm font-medium text-on-success-soft">
-              <CheckIcon aria-hidden="true" width={16} height={16} /> Saved
+            <span
+              role="status"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-status-purchased/12 px-2.5 py-1 text-xs font-semibold leading-4 text-status-purchased"
+            >
+              <CheckIcon aria-hidden="true" width={14} height={14} /> Saved
             </span>
           ) : collapsed && dirty ? (
-            <span className="shrink-0 rounded-full bg-warn-soft px-2.5 py-0.5 text-xs font-semibold text-on-warn-soft">Unsaved</span>
+            <span className="inline-flex shrink-0 items-center rounded-full bg-status-opened/12 px-2.5 py-1 text-xs font-semibold leading-4 text-status-opened">
+              Unsaved
+            </span>
           ) : null}
-          <ChevronDownIcon
-            aria-hidden="true"
-            width={22}
-            height={22}
-            className={cn("shrink-0 text-muted transition-transform duration-200", !collapsed && "rotate-180")}
-          />
+          <span aria-hidden="true" className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2">
+            <ChevronDownIcon width={18} height={18} className={cn("text-fg transition-transform duration-200", !collapsed && "rotate-180")} />
+          </span>
         </button>
       </h2>
       {/* Kept mounted while collapsed so unsaved edits survive; `hidden` removes it from view and the tab order. */}
-      <div id={bodyId} hidden={collapsed} className="lead-details-body px-4 pb-4">
+      <div id={bodyId} hidden={collapsed} className="lead-details-body px-4 pb-5 sm:px-5">
         {/* Remount on a new server version (after save) or on discard, so fields and the change count start clean. */}
         <EditorForm
           key={`${lead.updatedAt}:${discards}`}

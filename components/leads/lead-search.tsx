@@ -85,7 +85,7 @@ export function LeadSearch({ query, base, path = "/leads", label = "Search leads
         placeholder="Name or phone"
         aria-busy={pending}
         className={cn(
-          "min-h-12 w-full rounded-full border border-line bg-surface pl-12 text-base shadow-card placeholder:text-muted",
+          "field min-h-12 w-full rounded-full pl-12 text-base",
           // Room for the clear button only while there is text, so the placeholder fits next to the branch chip.
           value ? "pr-12" : "pr-4",
         )}

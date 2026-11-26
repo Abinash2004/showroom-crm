@@ -2,17 +2,23 @@ import Link from "next/link";
 import type { ButtonHTMLAttributes, ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "tonal" | "outline" | "danger" | "ghost";
+type Variant = "primary" | "tonal" | "outline" | "danger" | "ghost" | "ink" | "ink-accent";
 
 const base =
-  "press inline-flex min-h-12 min-w-12 select-none items-center justify-center gap-2 rounded-full px-5 text-base font-medium disabled:pointer-events-none disabled:opacity-60";
+  "press inline-flex min-h-12 min-w-12 select-none items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-primary text-on-primary",
-  tonal: "bg-primary-soft text-on-primary-soft",
-  outline: "border border-line bg-surface text-fg",
-  danger: "bg-danger text-bg",
-  ghost: "text-fg",
+  /** Racing Emerald: the main action on a screen. */
+  primary: "bg-primary text-on-primary hover:bg-primary-hover",
+  /** Pebble: secondary actions. */
+  tonal: "bg-surface-2 text-fg hover:bg-surface-2-hover",
+  outline: "bg-surface-2 text-fg hover:bg-surface-2-hover",
+  danger: "bg-danger-soft text-on-danger-soft hover:brightness-95",
+  ghost: "text-fg hover:bg-surface-2",
+  /** Obsidian: selected state / dark utility. */
+  ink: "bg-ink text-white hover:bg-ink/90",
+  /** Obsidian with bright emerald text, like selected chips (sign in / sign up). */
+  "ink-accent": "bg-ink text-[var(--accent-on-ink)] hover:bg-ink/90",
 };
 
 export const buttonClass = (variant: Variant = "primary", extra?: string): string => cn(base, variants[variant], extra);

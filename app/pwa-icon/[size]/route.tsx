@@ -21,7 +21,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ size: s
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#1d4ed8",
+          background: "#3b9357",
           color: "#ffffff",
           fontSize: glyph,
           fontWeight: 800,

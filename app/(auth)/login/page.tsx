@@ -11,16 +11,16 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { registered } = await searchParams;
   return (
     <>
-      <h1 className="mb-4 text-2xl font-semibold">Sign in</h1>
+      <h1 className="mb-5 font-display text-3xl font-bold tracking-tight">Sign in</h1>
       {registered ? (
-        <p role="status" className="mb-4 rounded-xl bg-success-soft p-4 text-sm font-medium text-on-success-soft">
+        <p role="status" className="mb-4 rounded-2xl bg-success-soft p-4 text-sm font-medium text-on-success-soft">
           Account created. Sign in with your phone number and password.
         </p>
       ) : null}
       <LoginForm />
-      <p className="mt-5 text-sm text-muted">
+      <p className="mt-6 text-center text-sm text-muted">
         First time here?{" "}
-        <Link href="/signup" className="font-medium text-primary underline underline-offset-4">
+        <Link href="/signup" className="font-semibold text-fg underline decoration-fg/30 underline-offset-4 hover:decoration-fg">
           Complete sign-up
         </Link>
       </p>

@@ -3,7 +3,7 @@
 import { signupAction } from "@/lib/actions/auth";
 import { signupSchema } from "@/lib/validators/auth";
 import { Button } from "@/components/ui/button";
-import { FormError, TextField } from "./fields";
+import { FormError, PasswordField, TextField } from "./fields";
 import { useActionForm } from "./use-action-form";
 
 export function SignupForm() {
@@ -31,24 +31,22 @@ export function SignupForm() {
         defaultValue={form.value("code")}
         error={form.fieldError("code")}
       />
-      <TextField
+      <PasswordField
         label="Create password"
         name="password"
-        type="password"
         autoComplete="new-password"
         required
         hint="At least 8 characters with a letter and a number."
         error={form.fieldError("password")}
       />
-      <TextField
+      <PasswordField
         label="Confirm password"
         name="confirmPassword"
-        type="password"
         autoComplete="new-password"
         required
         error={form.fieldError("confirmPassword")}
       />
-      <Button type="submit" className="w-full" disabled={form.pending}>
+      <Button type="submit" variant="primary" className="w-full" disabled={form.pending}>
         {form.pending ? "Creating account..." : "Create account"}
       </Button>
     </form>

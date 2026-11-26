@@ -159,7 +159,7 @@ export function DateRangeSheet({ base, from, to, today, active, path = "/leads",
           ) : (
             <CalendarIcon aria-hidden="true" width={18} height={18} className="shrink-0" />
           )}
-          {chipLabel ?? "Pick dates"}
+          {chipLabel ? <span className="chip-accent">{chipLabel}</span> : "Pick dates"}
         </button>
       }
     >
@@ -175,8 +175,8 @@ export function DateRangeSheet({ base, from, to, today, active, path = "/leads",
             <div
               key={label}
               className={cn(
-                "rounded-xl border px-3 py-2 transition-colors duration-150",
-                next ? "border-primary bg-primary-soft text-on-primary-soft" : "border-line bg-surface-2",
+                "rounded-2xl px-3 py-2 transition-colors duration-150",
+                next ? "bg-ink text-white" : "bg-surface-2",
               )}
             >
               <p className="text-[11px] font-semibold uppercase tracking-wider opacity-80">{label}</p>
@@ -272,7 +272,7 @@ export function DateRangeSheet({ base, from, to, today, active, path = "/leads",
                       "press relative flex aspect-square w-full max-w-12 items-center justify-center rounded-full text-[15px] tabular-nums",
                       "transition-colors duration-150",
                       selected
-                        ? "bg-primary font-semibold text-on-primary shadow-card"
+                        ? "bg-ink font-semibold text-white"
                         : inside
                           ? "font-medium text-on-primary-soft"
                           : "text-fg",

@@ -3,6 +3,7 @@
 import { createLeadAction } from "@/lib/actions/leads";
 import { leadCreateSchema } from "@/lib/validators/entities";
 import { Button } from "@/components/ui/button";
+import { PlusIcon } from "@/components/icons";
 import { FormError, TextAreaField, TextField } from "@/components/forms/fields";
 import { useActionForm } from "@/components/forms/use-action-form";
 import type { BranchDTO } from "@/lib/types";
@@ -38,6 +39,7 @@ export function LeadForm({ branches, today }: { branches: BranchDTO[]; today: st
         name="customerName"
         autoComplete="off"
         required
+        placeholder="Full name of showroom visitor"
         defaultValue={form.value("customerName")}
         error={form.fieldError("customerName")}
       />
@@ -67,17 +69,20 @@ export function LeadForm({ branches, today }: { branches: BranchDTO[]; today: st
       <TextField
         label="Customer location"
         name="customerLocation"
+        placeholder="Town, locality or city"
         defaultValue={form.value("customerLocation")}
         error={form.fieldError("customerLocation")}
       />
       <TextAreaField
         label="Vehicle details"
         name="vehicleDetails"
+        placeholder="e.g. Yamaha MT-15, Racing Blue, finance required"
         hint="Model, variant, colour, exchange vehicle or anything else the customer asked about."
         defaultValue={form.value("vehicleDetails")}
         error={form.fieldError("vehicleDetails")}
       />
       <Button type="submit" className="w-full" disabled={form.pending}>
+        <PlusIcon width={18} height={18} aria-hidden="true" />
         {form.pending ? "Saving..." : "Create lead"}
       </Button>
     </form>
