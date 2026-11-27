@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CheckIcon, PinIcon, SearchIcon, StoreIcon } from "@/components/icons";
+import { CheckIcon, PinIcon, SearchIcon } from "@/components/icons";
 import { Sheet } from "@/components/ui/sheet";
 import { cn } from "@/lib/cn";
 
@@ -66,8 +66,6 @@ export function CompactBranchLabel({
 interface BranchListSheetProps {
   branches: BranchOption[];
   selectedId?: string;
-  /** Adds an "All branches" row at the top (list filters). Forms pick exactly one branch. */
-  allowAll?: boolean;
   onSelect: (id: string | undefined) => void;
   trigger: React.ReactNode;
   title: string;
@@ -78,7 +76,7 @@ interface BranchListSheetProps {
  * Bottom sheet with every branch as a large two-line row (name + location).
  * One tap selects and closes. A search box appears for long lists.
  */
-export function BranchListSheet({ branches, selectedId, allowAll = false, onSelect, trigger, title, description }: BranchListSheetProps) {
+export function BranchListSheet({ branches, selectedId, onSelect, trigger, title, description }: BranchListSheetProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -135,23 +133,6 @@ export function BranchListSheet({ branches, selectedId, allowAll = false, onSele
         ) : null}
 
         <ul className="space-y-2" aria-label="Branches">
-          {allowAll && !query.trim() ? (
-            <li>
-              <button type="button" aria-pressed={!selectedId} onClick={() => choose(undefined)} className={rowClass(!selectedId)}>
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "flex size-10 shrink-0 items-center justify-center rounded-full",
-                    !selectedId ? "bg-white/15 text-white" : "bg-surface text-fg",
-                  )}
-                >
-                  <StoreIcon width={20} height={20} />
-                </span>
-                <BranchLabel name="All branches" location={`${branches.length} branches`} selected={!selectedId} />
-                {!selectedId ? <CheckIcon aria-hidden="true" width={20} height={20} className="shrink-0 text-[var(--accent-on-ink)]" /> : null}
-              </button>
-            </li>
-          ) : null}
           {visible.map((b) => {
             const active = b.id === selectedId;
             return (

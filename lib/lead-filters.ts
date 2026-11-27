@@ -73,3 +73,15 @@ export function pickRangeDay(range: DayRange, day: string): DayRange {
   if (!range.from || range.to) return { from: day };
   return day < range.from ? { from: day, to: range.from } : { from: range.from, to: day };
 }
+
+/**
+ * The one branch the lead and follow-up lists show. Takes candidates in priority order (link, then the
+ * remembered pick) and uses the first one the user may see; otherwise the first active branch (the list is
+ * already sorted by name), otherwise the first branch. No extra query: the caller has already loaded the
+ * user's branches, so a Set makes each candidate check O(1) after one O(n) pass.
+ */
+export function resolveBranchId(branches: { id: string; isActive: boolean }[], ...candidates: (string | undefined)[]): string | undefined {
+  const allowed = new Set(branches.map((b) => b.id));
+  for (const id of candidates) if (id && allowed.has(id)) return id;
+  return (branches.find((b) => b.isActive) ?? branches[0])?.id;
+}

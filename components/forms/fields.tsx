@@ -1,7 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
-import { EyeIcon, EyeOffIcon } from "@/components/icons";
+import { useEffect, useId, useRef, useState } from "react";
+import { CalendarIcon, EyeIcon, EyeOffIcon } from "@/components/icons";
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 import type { ActionError } from "@/lib/errors";
 import { cn } from "@/lib/cn";
@@ -59,6 +59,117 @@ export function TextField({ label, error, hint, className, ...props }: CommonPro
   );
 }
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const DISPLAY_DATE = /^(\d{2})-(\d{2})-(\d{4})$/;
+
+/** yyyy-mm-dd (the value the server receives) to dd-mm-yyyy (what the user sees). */
+function isoToDisplay(iso: string): string {
+  if (!ISO_DATE.test(iso)) return "";
+  const [y, m, d] = iso.split("-");
+  return `${d}-${m}-${y}`;
+}
+
+/** dd-mm-yyyy to yyyy-mm-dd, or "" when it isn't a real calendar date. */
+function displayToIso(text: string): string {
+  const m = DISPLAY_DATE.exec(text);
+  if (!m) return "";
+  const [, d, mo, y] = m;
+  const iso = `${y}-${mo}-${d}`;
+  const parsed = new Date(`${iso}T00:00:00Z`);
+  return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== iso ? "" : iso;
+}
+
+/** Keeps only digits and inserts the dashes as the user types: 2 digits, dash, 2 digits, dash, 4 digits. */
+function maskDisplay(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  const parts = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)].filter(Boolean);
+  return parts.join("-");
+}
+
+interface DateFieldProps {
+  label: string;
+  name: string;
+  required?: boolean;
+  /** Latest allowed date, yyyy-mm-dd (today for every date field here). */
+  max?: string;
+  /** Initial value, yyyy-mm-dd. */
+  defaultValue?: string;
+  error?: string;
+}
+
+/**
+ * Date input that always shows dd-mm-yyyy, whatever the device locale. Typing is masked; a calendar
+ * button opens the native picker, which fills the same text. The hidden field submits yyyy-mm-dd, so the
+ * server schemas and actions are unchanged.
+ */
+export function DateField({ label, name, required, max, defaultValue = "", error }: DateFieldProps) {
+  const [text, setText] = useState(() => isoToDisplay(defaultValue));
+  const pickerRef = useRef<HTMLInputElement>(null);
+  const hiddenRef = useRef<HTMLInputElement>(null);
+  const iso = displayToIso(text);
+
+  // The submitted value lives in the hidden input and only updates after React renders. Forms that read their
+  // fields on input events (the lead editor's change counter) would see the previous value, so announce the
+  // new one once it is committed. Skipped on mount.
+  const announced = useRef(iso);
+  useEffect(() => {
+    if (announced.current === iso) return;
+    announced.current = iso;
+    hiddenRef.current?.dispatchEvent(new Event("input", { bubbles: true }));
+  }, [iso]);
+  const incomplete = text.length === 10 && !iso;
+  const tooLate = Boolean(iso && max && iso > max);
+  const message = error ?? (incomplete ? "Enter a real date as dd-mm-yyyy." : tooLate ? "Date can't be in the future." : undefined);
+
+  return (
+    <Shell label={label} error={message} required={required}>
+      {({ id, describedBy, invalid }) => (
+        <div className="relative">
+          <input
+            id={id}
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder="dd-mm-yyyy"
+            maxLength={10}
+            value={text}
+            onChange={(e) => setText(maskDisplay(e.target.value))}
+            aria-invalid={invalid}
+            aria-describedby={describedBy}
+            className={cn(control, "pr-14 tabular-nums")}
+          />
+          <input ref={hiddenRef} type="hidden" name={name} value={iso} readOnly />
+          <input
+            ref={pickerRef}
+            type="date"
+            tabIndex={-1}
+            aria-hidden="true"
+            className="sr-only"
+            max={max}
+            value={iso}
+            onChange={(e) => setText(isoToDisplay(e.target.value))}
+          />
+          <button
+            type="button"
+            aria-label={`Open calendar for ${label}`}
+            onClick={() => {
+              const el = pickerRef.current;
+              if (!el) return;
+              try {
+                el.showPicker();
+              } catch {
+                el.focus();
+              }
+            }}
+            className="press absolute right-1 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:text-fg"
+          >
+            <CalendarIcon width={20} height={20} aria-hidden="true" />
+          </button>
+        </div>
+      )}
+    </Shell>
+  );
+}
 /** Password input with a show/hide toggle inside the field. The value and form submission are unchanged. */
 export function PasswordField({ label, error, hint, className, ...props }: CommonProps & Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
   const [visible, setVisible] = useState(false);

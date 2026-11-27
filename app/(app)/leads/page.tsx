@@ -13,13 +13,13 @@ import { EmptyState } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
 import { CloseIcon } from "@/components/icons";
 import { requireActor } from "@/lib/auth/session";
-import { canAccessBranch } from "@/lib/db/helpers";
+import { rememberedBranchId } from "@/lib/branch-preference-server";
 import { listBranches } from "@/lib/db/repositories/branches";
 import { leadStatusCounts, listLeads } from "@/lib/db/repositories/leads";
 import { LEAD_STATUSES } from "@/lib/constants";
 import { todayInputDate } from "@/lib/format";
 import { CHIP_ITEM, CHIP_LIST, CHIP_SCROLLER } from "@/lib/chip-classes";
-import { datePresets, matchPreset } from "@/lib/lead-filters";
+import { datePresets, matchPreset, resolveBranchId } from "@/lib/lead-filters";
 import type { DatePreset } from "@/lib/lead-filters";
 import { buildHref } from "@/lib/url";
 import { leadFilterSchema } from "@/lib/validators/entities";
@@ -29,18 +29,22 @@ export const runtime = "nodejs";
 
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const actor = await requireActor();
-  const parsed = leadFilterSchema.parse(await searchParams);
-  const filters = parsed.branchId && !canAccessBranch(actor, parsed.branchId) ? { ...parsed, branchId: undefined } : parsed;
+  const query = await searchParams;
+  const parsed = leadFilterSchema.parse(query);
+  // Always exactly one branch: the link's, else the one remembered from the last pick (shared with Follow-ups),
+  // else the first active branch. Each is used only if the user may see it.
+  const [branches, remembered] = await Promise.all([listBranches(actor), rememberedBranchId()]);
+  // Status defaults to Opened (the leads that need work); "All" is the explicit `status=all`, which the schema reads as no filter.
+  const status = query.status === "all" ? undefined : (parsed.status ?? "Opened");
+  const filters = { ...parsed, status, branchId: resolveBranchId(branches, parsed.branchId, remembered) };
+  // What goes in links: always explicit, so a refinement (search, dates, branch) never flips Opened back and forth.
+  const statusKey = filters.status ?? "all";
 
-  const [result, counts, branches] = await Promise.all([
-    listLeads(actor, filters),
-    leadStatusCounts(actor, filters),
-    listBranches(actor),
-  ]);
+  const [result, counts] = await Promise.all([listLeads(actor, filters), leadStatusCounts(actor, filters)]);
 
   const base = {
     q: filters.q,
-    status: filters.status,
+    status: statusKey,
     branchId: filters.branchId,
     from: filters.from,
     to: filters.to,
@@ -51,8 +55,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const presets = datePresets(today);
   const activePreset = matchPreset(presets, filters.from, filters.to);
   const customActive = Boolean((filters.from || filters.to) && !activePreset);
-  // Branch is a scope (shown in its chip), not a refinement: the empty-state reset keeps it.
-  const clearHref = buildHref("/leads", { status: filters.status, branchId: filters.branchId });
+  // Branch is the scope (shown in its chip), not a refinement: the empty-state reset keeps it.
+  const clearHref = buildHref("/leads", { status: statusKey, branchId: filters.branchId });
   const anyFilter = Boolean(filters.q || filters.from || filters.to);
   const renderPreset = (p: DatePreset) => {
     const active = activePreset?.id === p.id;
@@ -73,7 +77,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const dateSheet = (
     <li className={CHIP_ITEM}>
       <DateRangeSheet
-        base={{ q: filters.q, status: filters.status, branchId: filters.branchId }}
+        base={{ q: filters.q, status: statusKey, branchId: filters.branchId }}
         from={filters.from}
         to={filters.to}
         today={today}
@@ -92,7 +96,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       <div className="flex items-center gap-2.5">
         <LeadSearch
           query={filters.q ?? ""}
-          base={{ status: filters.status, branchId: filters.branchId, from: filters.from, to: filters.to }}
+          base={{ status: statusKey, branchId: filters.branchId, from: filters.from, to: filters.to }}
         />
         {branches.length > 1 ? (
           // Capped at 45% so the search box keeps room to type; long names truncate.
@@ -100,7 +104,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
             <BranchSwitcher
               branches={branches.map((b) => ({ id: b.id, name: b.name, location: b.location, isActive: b.isActive }))}
               selectedId={filters.branchId}
-              base={{ q: filters.q, status: filters.status, from: filters.from, to: filters.to }}
+              base={{ q: filters.q, status: statusKey, from: filters.from, to: filters.to }}
               className="max-w-full"
             />
           </div>
@@ -109,9 +113,10 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
       <nav aria-label="Filter by status" className={`${CHIP_SCROLLER} mt-1.5`}>
         <ul className={CHIP_LIST}>
-          {[undefined, ...LEAD_STATUSES].map((s) => (
+          {/* Opened first (the default view), "All" last. */}
+          {[...LEAD_STATUSES, undefined].map((s) => (
             <li key={s ?? "all"} className={CHIP_ITEM}>
-              <ChipLink href={href({ status: s })} active={filters.status === s} tone="solid">
+              <ChipLink href={href({ status: s ?? "all" })} active={filters.status === s} tone="solid">
                 {s ?? "All"}
                 <span className="chip-accent tabular-nums opacity-70">{s ? counts[s] : allCount}</span>
               </ChipLink>

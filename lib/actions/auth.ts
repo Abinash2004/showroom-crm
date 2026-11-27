@@ -7,6 +7,7 @@ import { loginSchema, signupSchema } from "@/lib/validators/auth";
 import { formDataToObject, parseInput } from "@/lib/validators/parse";
 import { getAuthService } from "@/lib/auth/container";
 import { clearSessionCookie, getRequestInfo, SESSION_COOKIE, setSessionCookie } from "@/lib/auth/session";
+import { BRANCH_COOKIE } from "@/lib/branch-preference";
 import { runAction } from "./run";
 
 export async function loginAction(formData: FormData): Promise<ActionResult> {
@@ -32,5 +33,6 @@ export async function logoutAction(): Promise<void> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (token) await getAuthService().logout(token);
   await clearSessionCookie();
+  (await cookies()).delete(BRANCH_COOKIE);
   redirect("/login");
 }

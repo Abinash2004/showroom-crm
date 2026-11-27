@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { createInteractionAction } from "@/lib/actions/leads";
 import { interactionCreateSchema } from "@/lib/validators/entities";
 import { Button } from "@/components/ui/button";
-import { FormError, TextAreaField, TextField } from "@/components/forms/fields";
+import { DateField, FormError, TextAreaField } from "@/components/forms/fields";
 import { useActionForm } from "@/components/forms/use-action-form";
 
 interface InteractionFormProps {
@@ -23,7 +23,7 @@ export function InteractionForm({ leadId, today, onDone }: InteractionFormProps)
     <form action={form.formAction} noValidate className="space-y-4" key={form.successCount}>
       <FormError error={form.error} />
       <input type="hidden" name="leadId" value={leadId} />
-      <TextField label="Date" name="date" type="date" required max={today} defaultValue={form.value("date", today)} error={form.fieldError("date")} />
+      <DateField label="Date" name="date" required max={today} defaultValue={form.value("date", today)} error={form.fieldError("date")} />
       <TextAreaField
         label="Outcome"
         name="outcome"

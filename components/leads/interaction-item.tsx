@@ -6,7 +6,7 @@ import { interactionUpdateSchema } from "@/lib/validators/entities";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { CalendarIcon, UserIcon } from "@/components/icons";
-import { FormError, TextAreaField, TextField } from "@/components/forms/fields";
+import { DateField, FormError, TextAreaField } from "@/components/forms/fields";
 import { useActionForm } from "@/components/forms/use-action-form";
 import { formatDate, ordinal, toInputDate } from "@/lib/format";
 import type { InteractionDTO } from "@/lib/types";
@@ -20,10 +20,9 @@ function EditForm({ interaction, today, onDone }: { interaction: InteractionDTO;
     <form action={form.formAction} noValidate className="space-y-4">
       <FormError error={form.error} />
       <input type="hidden" name="id" value={interaction.id} />
-      <TextField
+      <DateField
         label="Date"
         name="date"
-        type="date"
         required
         max={today}
         defaultValue={form.value("date", toInputDate(interaction.date))}

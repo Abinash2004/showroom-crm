@@ -4,7 +4,7 @@ import { createLeadAction } from "@/lib/actions/leads";
 import { leadCreateSchema } from "@/lib/validators/entities";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@/components/icons";
-import { FormError, TextAreaField, TextField } from "@/components/forms/fields";
+import { DateField, FormError, TextAreaField, TextField } from "@/components/forms/fields";
 import { useActionForm } from "@/components/forms/use-action-form";
 import type { BranchDTO } from "@/lib/types";
 import { BranchField } from "./branch-field";
@@ -24,10 +24,9 @@ export function LeadForm({ branches, today }: { branches: BranchDTO[]; today: st
           defaultValue={form.value("branchId")}
           error={form.fieldError("branchId")}
         />
-        <TextField
+        <DateField
           label="Visit date"
           name="visitDate"
-          type="date"
           required
           max={today}
           defaultValue={form.value("visitDate", today)}
@@ -76,7 +75,7 @@ export function LeadForm({ branches, today }: { branches: BranchDTO[]; today: st
       <TextAreaField
         label="Vehicle details"
         name="vehicleDetails"
-        placeholder="e.g. Yamaha MT-15, Racing Blue, finance required"
+        placeholder="e.g. Model, colour, finance required"
         hint="Model, variant, colour, exchange vehicle or anything else the customer asked about."
         defaultValue={form.value("vehicleDetails")}
         error={form.fieldError("vehicleDetails")}

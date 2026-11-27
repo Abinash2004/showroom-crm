@@ -5,6 +5,7 @@ import { useTransition } from "react";
 import { useBusySignal } from "@/components/layout/busy";
 import { Spinner, StoreIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
+import { rememberBranch } from "@/lib/branch-preference";
 import { buildHref } from "@/lib/url";
 import { BranchListSheet, CompactBranchLabel } from "./branch-list-sheet";
 import type { BranchOption } from "./branch-list-sheet";
@@ -14,7 +15,7 @@ export type { BranchOption } from "./branch-list-sheet";
 interface BranchSwitcherProps {
   /** Branches the user may see: all for admins, assigned ones for everyone else (resolved on the server). */
   branches: BranchOption[];
-  selectedId?: string;
+  selectedId: string | undefined;
   /** Other active filters, kept when the branch changes. */
   base: Record<string, string | undefined>;
   /** List page to update (default: the lead list). */
@@ -24,27 +25,29 @@ interface BranchSwitcherProps {
 }
 
 /**
- * Single-branch scope for the lead and follow-up lists: "All branches" or exactly one branch.
+ * Single-branch scope for the lead and follow-up lists: always exactly one branch (no "All branches").
  * One tap opens the list, one tap applies and closes. No Apply button.
  */
 export function BranchSwitcher({ branches, selectedId, base, path = "/leads", className }: BranchSwitcherProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   useBusySignal(pending);
-  const selected = selectedId ? branches.find((b) => b.id === selectedId) : undefined;
+  // The page always resolves a branch; the fallback only guards against a stale id.
+  const selected = branches.find((b) => b.id === selectedId) ?? branches[0];
 
   // With one branch (or none) there is nothing to choose, so no chip at all.
-  if (branches.length < 2) return null;
+  if (!selected || branches.length < 2) return null;
 
   return (
     <BranchListSheet
       branches={branches}
-      selectedId={selected?.id}
-      allowAll
+      selectedId={selected.id}
       title="Choose branch"
-      description="Show every branch or just one."
+      description="Leads and follow-ups are shown one branch at a time."
       onSelect={(id) => {
-        if (id === selectedId) return;
+        if (!id || id === selected.id) return;
+        // Remembered for the visit: the other list (Leads / Follow-ups) opens on the same branch.
+        rememberBranch(id);
         startTransition(() => {
           router.replace(buildHref(path, { ...base, branchId: id }), { scroll: false });
         });
@@ -52,10 +55,10 @@ export function BranchSwitcher({ branches, selectedId, base, path = "/leads", cl
       trigger={
         <button
           type="button"
-          aria-label={`Branch: ${selected ? `${selected.name}, ${selected.location}` : "All branches"}. Change branch`}
+          aria-label={`Branch: ${selected.name}, ${selected.location}. Change branch`}
           aria-haspopup="dialog"
           className={cn(
-            // Always in the selected (Obsidian) style: the branch scope is always set, "All branches" included.
+            // Always in the selected (Obsidian) style: a branch is always selected.
             "press flex min-h-12 max-w-full items-center gap-2.5 rounded-full bg-ink py-1.5 pl-1.5 pr-3.5 text-left text-white transition-colors hover:bg-ink/90",
             className,
           )}
@@ -66,16 +69,7 @@ export function BranchSwitcher({ branches, selectedId, base, path = "/leads", cl
           >
             {pending ? <Spinner width={18} height={18} /> : <StoreIcon width={18} height={18} />}
           </span>
-          {selected ? (
-            <CompactBranchLabel name={selected.name} location={selected.location} className="min-w-0" nameClassName="text-[var(--accent-on-ink)]" />
-          ) : (
-            <CompactBranchLabel
-              name="All branches"
-              location={`${branches.length} locations`}
-              className="min-w-0"
-              nameClassName="text-[var(--accent-on-ink)]"
-            />
-          )}
+          <CompactBranchLabel name={selected.name} location={selected.location} className="min-w-0" nameClassName="text-[var(--accent-on-ink)]" />
         </button>
       }
     />

@@ -13,12 +13,12 @@ import { EmptyState } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
 import { CloseIcon } from "@/components/icons";
 import { requireActor } from "@/lib/auth/session";
-import { canAccessBranch } from "@/lib/db/helpers";
+import { rememberedBranchId } from "@/lib/branch-preference-server";
 import { listBranches } from "@/lib/db/repositories/branches";
 import { interactionReport } from "@/lib/db/repositories/interactions";
 import { todayInputDate } from "@/lib/format";
 import { CHIP_ITEM, CHIP_LIST } from "@/lib/chip-classes";
-import { datePresets, matchPreset } from "@/lib/lead-filters";
+import { datePresets, matchPreset, resolveBranchId } from "@/lib/lead-filters";
 import type { DatePreset } from "@/lib/lead-filters";
 import { buildHref } from "@/lib/url";
 import { interactionFilterSchema } from "@/lib/validators/entities";
@@ -31,8 +31,11 @@ const PATH = "/interactions";
 export default async function InteractionsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const actor = await requireActor();
   const parsed = interactionFilterSchema.parse(await searchParams);
-  const filters = parsed.branchId && !canAccessBranch(actor, parsed.branchId) ? { ...parsed, branchId: undefined } : parsed;
-  const [result, branches] = await Promise.all([interactionReport(actor, filters), listBranches(actor)]);
+  // Always exactly one branch: the link's, else the one remembered from the last pick (shared with Leads),
+  // else the first active branch. Each is used only if the user may see it.
+  const [branches, remembered] = await Promise.all([listBranches(actor), rememberedBranchId()]);
+  const filters = { ...parsed, branchId: resolveBranchId(branches, parsed.branchId, remembered) };
+  const result = await interactionReport(actor, filters);
 
   const base = { q: filters.q, branchId: filters.branchId, from: filters.from, to: filters.to };
   const href = (over: Partial<typeof base>) => buildHref(PATH, { ...base, ...over });
@@ -41,7 +44,7 @@ export default async function InteractionsPage({ searchParams }: { searchParams:
   const presets = datePresets(today);
   const activePreset = matchPreset(presets, filters.from, filters.to);
   const customActive = Boolean((filters.from || filters.to) && !activePreset);
-  // Branch is a scope (shown in its chip), not a refinement: the empty-state reset keeps it.
+  // Branch is the scope (shown in its chip), not a refinement: the empty-state reset keeps it.
   const clearHref = buildHref(PATH, { branchId: filters.branchId });
   const anyFilter = Boolean(filters.q || filters.from || filters.to);
 

@@ -6,7 +6,7 @@ import { updateLeadAction } from "@/lib/actions/leads";
 import { CheckIcon, ChevronDownIcon, PhoneIcon } from "@/components/icons";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
-import { FormError, TextAreaField, TextField } from "@/components/forms/fields";
+import { DateField, FormError, TextAreaField, TextField } from "@/components/forms/fields";
 import { useActionForm } from "@/components/forms/use-action-form";
 import { cn } from "@/lib/cn";
 import { LEAD_STATUSES } from "@/lib/constants";
@@ -228,10 +228,9 @@ function EditorForm({ lead, branches, today, onDiscard, onSaved, onDirtyChange }
           error={form.fieldError("branchId")}
           onValueChange={() => setBranchPicks((n) => n + 1)}
         />
-        <TextField
+        <DateField
           label="Visit date"
           name="visitDate"
-          type="date"
           required
           max={today}
           defaultValue={value("visitDate")}
