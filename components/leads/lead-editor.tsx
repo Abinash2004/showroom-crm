@@ -70,7 +70,7 @@ function PhoneInput({
   const callable = /^\d{10}$/.test(digits);
   return (
     <div className="min-w-0 space-y-1.5">
-      <label htmlFor={id} className="block text-[13px] font-semibold">
+      <label htmlFor={id} className="block text-[0.8125rem] font-semibold">
         {label}
         {required ? <span className="text-danger"> *</span> : null}
       </label>
@@ -86,7 +86,7 @@ function PhoneInput({
           onInput={(e) => setValue(e.currentTarget.value)}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
-          className="field min-h-12 w-full min-w-0 flex-1 px-4 py-3 font-mono text-[15px] tabular-nums"
+          className="field min-h-12 w-full min-w-0 flex-1 px-4 py-3 font-mono text-[0.9375rem] tabular-nums"
         />
         {callable ? (
           <a
@@ -166,21 +166,27 @@ function EditorForm({ lead, branches, today, onDiscard, onSaved, onDirtyChange }
       {/* min-w-0: a fieldset's default min-width is its content's, which let the chip row stretch the whole card. */}
       <fieldset className="min-w-0">
         <legend className="sr-only">Status</legend>
-        {/* 4-option segmented control: always one row, the selected option in Obsidian. */}
-        <div className="grid grid-cols-4 gap-1.5">
+        {/*
+          4-option segmented control, the selected option in Obsidian. Phones: one row that bleeds to the
+          card edges and scrolls sideways like the list chips, so labels never truncate. From 768px the
+          options share the full width equally.
+        */}
+        <div className="chip-row -mx-4 overflow-x-auto py-1 pl-4 sm:-mx-5 sm:pl-5 md:mx-0 md:overflow-visible md:pl-0">
+          <div className="flex w-max gap-1.5 pr-4 sm:pr-5 md:w-full md:pr-0">
           {LEAD_STATUSES.map((s) => (
             <label
               key={s}
               className={cn(
-                "press flex min-h-11 min-w-0 cursor-pointer items-center justify-center gap-1 rounded-full bg-surface-2 px-1 text-[13px] font-medium transition-colors hover:bg-surface-2-hover sm:text-sm",
+                "press flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-1 rounded-full bg-surface-2 px-4 text-[0.8125rem] font-medium transition-colors hover:bg-surface-2-hover sm:text-sm md:min-w-0 md:flex-1 md:px-1",
                 "has-[:checked]:bg-ink has-[:checked]:font-semibold has-[:checked]:text-white",
                 "has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--focus)]",
               )}
             >
               <input type="radio" name="status" value={s} defaultChecked={status === s} className="peer sr-only" />
-              <span className="truncate">{s}</span>
+              <span className="whitespace-nowrap md:truncate">{s}</span>
             </label>
           ))}
+          </div>
         </div>
       </fieldset>
 
@@ -193,7 +199,8 @@ function EditorForm({ lead, branches, today, onDiscard, onSaved, onDirtyChange }
         error={form.fieldError("customerName")}
       />
 
-      <div className="grid grid-cols-2 items-start gap-3 [&>*]:min-w-0">
+      {/* Stacked on narrow phones: a half-width column can't show 10 digits next to the call button. */}
+      <div className="grid grid-cols-1 items-start gap-3 min-[400px]:grid-cols-2 [&>*]:min-w-0">
         <PhoneInput
           label="Phone"
           name="customerPhone"
@@ -331,7 +338,7 @@ export function LeadEditor({ lead, branches, today }: LeadEditorProps) {
         >
           {/* Expanded: just the title (the form shows name and status). Collapsed: title + status tag. */}
           <span className="flex min-w-0 flex-1 items-center gap-2.5">
-            <span className="truncate text-[17px] font-semibold leading-snug">Customer Details</span>
+            <span className="truncate text-[1.0625rem] font-semibold leading-snug">Customer Details</span>
             {collapsed ? <StatusBadge status={lead.status} className="shrink-0" /> : null}
           </span>
           {justSaved ? (

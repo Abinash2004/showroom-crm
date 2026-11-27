@@ -34,7 +34,7 @@ function EditForm({ interaction, today, onDone }: { interaction: InteractionDTO;
         name="outcome"
         required
         rows={6}
-        className="soft-scroll text-[15px] leading-relaxed"
+        className="soft-scroll text-[0.9375rem] leading-relaxed"
         defaultValue={form.value("outcome", interaction.outcome)}
         error={form.fieldError("outcome")}
       />
@@ -104,7 +104,7 @@ export function InteractionItem({ interaction, today, sequence, total }: Interac
       <div className="pointer-events-none relative flex h-full flex-col p-4">
         {/* 1. Which interaction + date tag */}
         <div className="flex items-center justify-between gap-3">
-          <h3 className="min-w-0 truncate text-[17px] font-semibold leading-snug">
+          <h3 className="min-w-0 truncate text-[1.0625rem] font-semibold leading-snug">
             {ordinal(sequence)} interaction
             <span className="sr-only"> of {total}</span>
           </h3>
@@ -155,7 +155,7 @@ export function InteractionItem({ interaction, today, sequence, total }: Interac
             >
               <div className="space-y-4">
                 {/* Outcome on a pebble panel, scrolling inside the sheet when it is very long. */}
-                <p className="soft-scroll max-h-[45dvh] overflow-y-auto whitespace-pre-wrap rounded-[22px] bg-surface-2 p-4 text-[15px] leading-relaxed text-fg/90 [overflow-wrap:anywhere]">
+                <p className="soft-scroll max-h-[45dvh] overflow-y-auto whitespace-pre-wrap rounded-[22px] bg-surface-2 p-4 text-[0.9375rem] leading-relaxed text-fg/90 [overflow-wrap:anywhere]">
                   {interaction.outcome}
                 </p>
                 <Button

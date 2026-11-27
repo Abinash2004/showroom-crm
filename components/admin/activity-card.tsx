@@ -38,7 +38,7 @@ export function ActivityCard({ entry, branchNames }: { entry: ActivityDTO; branc
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold text-muted">{ENTITY_LABEL[entry.entity]}</p>
-          <h2 className="line-clamp-1 text-[17px] font-semibold leading-snug [overflow-wrap:anywhere]">{entry.subject}</h2>
+          <h2 className="line-clamp-1 text-[1.0625rem] font-semibold leading-snug [overflow-wrap:anywhere]">{entry.subject}</h2>
         </div>
         <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold leading-4", ACTION_TONE[entry.action])}>
           {ACTION_LABEL[entry.action]}

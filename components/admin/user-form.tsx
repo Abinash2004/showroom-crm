@@ -98,7 +98,7 @@ export function UserForm({ branches, user, onSaved }: UserFormProps) {
 
       {/* Hidden and disabled for admins: disabled controls aren't posted; ticks are kept if admin is unchecked again. */}
       <fieldset className="min-w-0 space-y-2" hidden={isAdmin} disabled={isAdmin} aria-describedby={branchError ? "branch-error" : undefined}>
-        <legend className="mb-2 text-[13px] font-semibold">
+        <legend className="mb-2 text-[0.8125rem] font-semibold">
           Assigned branches <span className="text-danger">*</span>
         </legend>
         {branches.length === 0 ? <p className="text-sm text-muted">Create a branch first.</p> : null}
@@ -118,7 +118,7 @@ export function UserForm({ branches, user, onSaved }: UserFormProps) {
                 className="size-5 shrink-0 accent-[var(--primary)]"
               />
               <span className="min-w-0 flex-1 leading-tight">
-                <span className="block truncate text-[15px] font-medium">{b.name}</span>
+                <span className="block truncate text-[0.9375rem] font-medium">{b.name}</span>
                 <span className="mt-0.5 block truncate text-xs opacity-70">
                   {b.location}
                   {b.isActive ? null : " · Inactive"}

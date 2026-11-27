@@ -31,7 +31,7 @@ export default async function AccountPage() {
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="line-clamp-1 min-w-0 text-[17px] font-semibold leading-snug [overflow-wrap:anywhere]">{actor.name}</h2>
+                <h2 className="line-clamp-1 min-w-0 text-[1.0625rem] font-semibold leading-snug [overflow-wrap:anywhere]">{actor.name}</h2>
                 <span
                   className={cn(
                     "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold leading-4",

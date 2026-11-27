@@ -29,7 +29,7 @@ export function LeadCard({ lead, className }: { lead: LeadDTO; className?: strin
         <div className="pointer-events-none relative flex h-full flex-col p-4">
           {/* 1. Name + status */}
           <div className="flex items-center justify-between gap-3">
-            <h2 className="line-clamp-1 min-w-0 text-[17px] font-semibold leading-snug [overflow-wrap:anywhere]">{lead.customerName}</h2>
+            <h2 className="line-clamp-1 min-w-0 text-[1.0625rem] font-semibold leading-snug [overflow-wrap:anywhere]">{lead.customerName}</h2>
             <StatusBadge status={lead.status} className="shrink-0" />
           </div>
 
@@ -45,7 +45,7 @@ export function LeadCard({ lead, className }: { lead: LeadDTO; className?: strin
           {/* 3 + 4. Contact and context, with the call action */}
           <div className="mt-auto flex items-end justify-between gap-3 pt-4">
             <div className="min-w-0 space-y-1.5">
-              <p className="flex items-center gap-1.5 text-[15px] font-semibold tabular-nums tracking-wide">
+              <p className="flex items-center gap-1.5 text-[0.9375rem] font-semibold tabular-nums tracking-wide">
                 <PhoneIcon aria-hidden="true" width={15} height={15} className="shrink-0 text-muted" />
                 {phone}
               </p>

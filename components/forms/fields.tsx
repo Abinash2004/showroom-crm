@@ -24,7 +24,7 @@ function Shell({ label, error, hint, required, children }: ShellProps) {
   const describedBy = [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(" ") || undefined;
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-[13px] font-semibold text-fg">
+      <label htmlFor={id} className="block text-[0.8125rem] font-semibold text-fg">
         {label}
         {required ? <span className="text-danger"> *</span> : null}
       </label>

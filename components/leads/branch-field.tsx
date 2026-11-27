@@ -60,7 +60,7 @@ export function BranchField({ name, label, branches, defaultValue, error, onValu
 
   return (
     <div className="space-y-1.5">
-      <span id={labelId} className="block text-[13px] font-semibold">
+      <span id={labelId} className="block text-[0.8125rem] font-semibold">
         {label}
         <span className="text-danger"> *</span>
       </span>

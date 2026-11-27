@@ -20,7 +20,7 @@ export function FollowUpCard({ item, className }: { item: InteractionReportRow; 
       >
         {/* 1. Customer + branch tag (same capsule style as the "Opened" status) */}
         <div className="flex items-center justify-between gap-3">
-          <h2 className="line-clamp-1 min-w-0 text-[17px] font-semibold leading-snug [overflow-wrap:anywhere]">{item.customerName}</h2>
+          <h2 className="line-clamp-1 min-w-0 text-[1.0625rem] font-semibold leading-snug [overflow-wrap:anywhere]">{item.customerName}</h2>
           <span
             title={branch}
             className="inline-flex min-w-0 max-w-[55%] shrink-0 items-center gap-1 rounded-full bg-status-opened/12 px-2.5 py-1 text-xs font-semibold leading-4 text-status-opened"

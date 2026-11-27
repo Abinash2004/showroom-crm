@@ -43,7 +43,7 @@ export function LeadForm({ branches, today }: { branches: BranchDTO[]; today: st
         defaultValue={form.value("customerName")}
         error={form.fieldError("customerName")}
       />
-      <div className="grid grid-cols-2 items-start gap-3 [&>*]:min-w-0">
+      <div className="grid grid-cols-1 items-start gap-3 min-[400px]:grid-cols-2 [&>*]:min-w-0">
         <TextField
           label="Phone"
           name="customerPhone"

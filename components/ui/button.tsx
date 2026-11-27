@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 type Variant = "primary" | "tonal" | "outline" | "danger" | "ghost" | "ink" | "ink-accent";
 
 const base =
-  "press inline-flex min-h-12 min-w-12 select-none items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50";
+  "press inline-flex min-h-12 min-w-12 select-none items-center justify-center gap-2 rounded-full px-5 text-[0.9375rem] font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50";
 
 const variants: Record<Variant, string> = {
   /** Racing Emerald: the main action on a screen. */

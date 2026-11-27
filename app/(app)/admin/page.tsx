@@ -54,7 +54,7 @@ function HubCard({ href, title, text, icon, value, unit, detail, tags = [] }: Hu
       >
         {/* 1. Title + tags */}
         <div className="flex items-start justify-between gap-3">
-          <h3 className="flex min-w-0 items-center gap-2 text-[17px] font-semibold leading-snug">
+          <h3 className="flex min-w-0 items-center gap-2 text-[1.0625rem] font-semibold leading-snug">
             <span aria-hidden="true" className="shrink-0 text-muted">
               {icon}
             </span>
@@ -90,7 +90,7 @@ function HubCard({ href, title, text, icon, value, unit, detail, tags = [] }: Hu
 function Group({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section aria-labelledby={id} className="space-y-3">
-      <h2 id={id} className="px-1 text-[15px] font-semibold text-muted">
+      <h2 id={id} className="px-1 text-[0.9375rem] font-semibold text-muted">
         {title}
       </h2>
       <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">{children}</ul>

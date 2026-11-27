@@ -84,7 +84,7 @@ export function BottomNav({ isAdmin }: { isAdmin: boolean }) {
                       href={item.href}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "press flex min-h-12 items-center gap-3 rounded-2xl px-4 text-[15px] font-medium transition-colors",
+                        "press flex min-h-12 items-center gap-3 rounded-2xl px-4 text-[0.9375rem] font-medium transition-colors",
                         active ? "bg-white/15 text-white" : "text-zinc-400 hover:text-white",
                       )}
                     >
@@ -143,7 +143,7 @@ export function BottomNav({ isAdmin }: { isAdmin: boolean }) {
                   <span
                     className={cn(
                       "truncate whitespace-nowrap leading-none",
-                      active ? "text-[13px] font-semibold" : "text-[11px] font-medium",
+                      active ? "text-[0.8125rem] font-semibold" : "text-[0.6875rem] font-medium",
                     )}
                   >
                     {item.label}

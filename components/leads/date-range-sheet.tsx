@@ -179,7 +179,7 @@ export function DateRangeSheet({ base, from, to, today, active, path = "/leads",
                 next ? "bg-ink text-white" : "bg-surface-2",
               )}
             >
-              <p className="text-[11px] font-semibold uppercase tracking-wider opacity-80">{label}</p>
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-wider opacity-80">{label}</p>
               <p className="truncate text-lg font-semibold tabular-nums">
                 {value ? formatShortDate(value, year) : <span className="font-normal opacity-70">{next ? "Tap a day" : "-"}</span>}
               </p>
@@ -269,7 +269,7 @@ export function DateRangeSheet({ base, from, to, today, active, path = "/leads",
                     }}
                     onKeyDown={(e) => onDayKey(e, day)}
                     className={cn(
-                      "press relative flex aspect-square w-full max-w-12 items-center justify-center rounded-full text-[15px] tabular-nums",
+                      "press relative flex aspect-square w-full max-w-12 items-center justify-center rounded-full text-[0.9375rem] tabular-nums",
                       "transition-colors duration-150",
                       selected
                         ? "bg-ink font-semibold text-white"

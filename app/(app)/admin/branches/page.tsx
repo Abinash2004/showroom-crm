@@ -43,7 +43,7 @@ export default async function BranchesPage() {
                   {/* 1. Name + location on one line, status tag on the right */}
                   <div className="flex items-center justify-between gap-3">
                     <h2 className="flex min-w-0 items-baseline gap-2">
-                      <span className="line-clamp-1 shrink-0 text-[17px] font-semibold leading-snug [overflow-wrap:anywhere]">{b.name}</span>
+                      <span className="line-clamp-1 shrink-0 text-[1.0625rem] font-semibold leading-snug [overflow-wrap:anywhere]">{b.name}</span>
                       <span className="flex min-w-0 items-center gap-1 text-sm font-normal text-muted">
                         <PinIcon aria-hidden="true" width={14} height={14} className="shrink-0 self-center" />
                         <span className="truncate">{b.location}</span>
@@ -60,7 +60,7 @@ export default async function BranchesPage() {
                   </div>
 
                   {/* 2. Phone, right under the name */}
-                  <p className="mt-1.5 flex items-center gap-1.5 text-[15px] font-semibold tabular-nums tracking-wide">
+                  <p className="mt-1.5 flex items-center gap-1.5 text-[0.9375rem] font-semibold tabular-nums tracking-wide">
                     <PhoneIcon aria-hidden="true" width={15} height={15} className="shrink-0 text-muted" />
                     {formatPhone(b.phone)}
                   </p>

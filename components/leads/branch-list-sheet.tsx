@@ -37,7 +37,7 @@ function BranchLabel({
         </span>
       ) : null}
       {inactive ? (
-        <span className={cn("shrink-0 text-[11px] font-semibold", selected ? "text-zinc-300" : "text-muted")}>· Inactive</span>
+        <span className={cn("shrink-0 text-[0.6875rem] font-semibold", selected ? "text-zinc-300" : "text-muted")}>· Inactive</span>
       ) : null}
     </span>
   );

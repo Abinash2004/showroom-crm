@@ -92,6 +92,28 @@ html {
   overscroll-behavior-y: contain;
 }
 
+/*
+ * Narrow phones: Android's default "Display size" on many 1080px-wide devices (Galaxy A55, Oppo F25 Pro)
+ * gives a ~360px CSS viewport. All sizes are rem-based, so easing the root size scales the whole UI
+ * down in proportion, like the phone's "Small" display setting. Phones get a slight trim (15.5px) for
+ * headroom with long names; narrower screens step down further. Percentages keep the user's font setting.
+ */
+@media (max-width: 767px) {
+  html {
+    font-size: 96.875%;
+  }
+}
+@media (max-width: 379px) {
+  html {
+    font-size: 90%;
+  }
+}
+@media (max-width: 339px) {
+  html {
+    font-size: 85%;
+  }
+}
+
 body {
   min-height: 100dvh;
   background: var(--bg);

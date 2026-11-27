@@ -68,7 +68,7 @@ export default async function UsersPage() {
                     {/* 1. Name + code on one line, tags on the right */}
                     <div className="flex items-start justify-between gap-3">
                       <h2 className="flex min-w-0 items-baseline gap-2">
-                        <span className="line-clamp-1 min-w-0 text-[17px] font-semibold leading-snug [overflow-wrap:anywhere]">{u.name}</span>
+                        <span className="line-clamp-1 min-w-0 text-[1.0625rem] font-semibold leading-snug [overflow-wrap:anywhere]">{u.name}</span>
                         <span className="shrink-0 text-xs font-semibold text-muted">{u.code}</span>
                       </h2>
                       {tags.length > 0 ? (
@@ -83,7 +83,7 @@ export default async function UsersPage() {
                     </div>
 
                     {/* 2. Phone */}
-                    <p className="mt-1.5 flex items-center gap-1.5 text-[15px] font-semibold tabular-nums tracking-wide">
+                    <p className="mt-1.5 flex items-center gap-1.5 text-[0.9375rem] font-semibold tabular-nums tracking-wide">
                       <PhoneIcon aria-hidden="true" width={15} height={15} className="shrink-0 text-muted" />
                       {formatPhone(u.phone)}
                     </p>

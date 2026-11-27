@@ -92,7 +92,7 @@ export default async function SessionsPage() {
                       />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <h2 className="line-clamp-1 text-[17px] font-semibold leading-snug [overflow-wrap:anywhere]">{g.name}</h2>
+                      <h2 className="line-clamp-1 text-[1.0625rem] font-semibold leading-snug [overflow-wrap:anywhere]">{g.name}</h2>
                       <p className={cn("text-sm", live ? "font-semibold text-status-purchased" : "text-muted")}>
                         {live ? "Active now" : `Last active ${formatAgo(new Date(g.lastActiveMs).toISOString(), now)}`}
                       </p>
@@ -112,7 +112,7 @@ export default async function SessionsPage() {
                       return (
                         <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-3">
                           <div className="min-w-0">
-                            <p className="truncate text-[15px] font-medium">{device.label}</p>
+                            <p className="truncate text-[0.9375rem] font-medium">{device.label}</p>
                             <p className="mt-0.5 truncate text-xs tabular-nums text-muted">
                               {describeIp(s.userIp)} &middot; Signed in {formatDateTime(s.createdAt)}
                             </p>
