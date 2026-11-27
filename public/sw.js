@@ -1,5 +1,5 @@
 /* Offline shell. Only static assets and the /offline page are cached. Authenticated HTML and data are never stored. */
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL_CACHE = `shell-${VERSION}`;
 const STATIC_CACHE = `static-${VERSION}`;
 
