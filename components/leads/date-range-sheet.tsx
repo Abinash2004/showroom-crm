@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useBusySignal } from "@/components/layout/busy";
 import type { KeyboardEvent, TouchEvent } from "react";
 import { BackIcon, CalendarIcon, Spinner } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ export function DateRangeSheet({ base, from, to, today, active, path = "/leads",
   const [view, setView] = useState(isoMonth(to ?? from ?? today));
   const [focusDay, setFocusDay] = useState(to ?? from ?? today);
   const [pending, startTransition] = useTransition();
+  useBusySignal(pending);
   const gridRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const keyNav = useRef(false);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useBusySignal } from "@/components/layout/busy";
 import { setBranchActiveAction, setUserActiveAction } from "@/lib/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
@@ -22,6 +23,7 @@ const chip =
  */
 export function ToggleActive({ kind, id, name, isActive }: ToggleActiveProps) {
   const [pending, startTransition] = useTransition();
+  useBusySignal(pending);
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const needsConfirm = isActive && kind === "user";

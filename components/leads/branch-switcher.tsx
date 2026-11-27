@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { useBusySignal } from "@/components/layout/busy";
 import { Spinner, StoreIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { buildHref } from "@/lib/url";
@@ -29,6 +30,7 @@ interface BranchSwitcherProps {
 export function BranchSwitcher({ branches, selectedId, base, path = "/leads", className }: BranchSwitcherProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  useBusySignal(pending);
   const selected = selectedId ? branches.find((b) => b.id === selectedId) : undefined;
 
   // With one branch (or none) there is nothing to choose, so no chip at all.

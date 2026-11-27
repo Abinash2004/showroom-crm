@@ -1,4 +1,5 @@
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { NavigationBusyWatcher } from "@/components/layout/busy";
 import { ViewerProvider } from "@/components/layout/viewer";
 import { requireActor } from "@/lib/auth/session";
 
@@ -9,6 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const actor = await requireActor();
   return (
     <ViewerProvider viewer={{ name: actor.name, isAdmin: actor.isAdmin, branchCount: actor.branchIds.length }}>
+      <NavigationBusyWatcher />
       <BottomNav isAdmin={actor.isAdmin} />
       {/* overflow-x-clip: nothing can widen the page past the screen (which would push the fixed dock out of view).
           `clip` doesn't create a scroll container, so sticky headers keep working. */}

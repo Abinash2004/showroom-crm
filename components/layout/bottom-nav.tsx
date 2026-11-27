@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ChatIcon, ListIcon, PlusIcon, ShieldIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { initials } from "@/lib/format";
+import { LiveWheelMark } from "./busy";
 import { roleLine, useViewer } from "./viewer";
 
 interface Item {
@@ -37,9 +38,8 @@ const ADMIN: Item = { href: "/admin", label: "Admin", icon: (s) => <ShieldIcon w
 function Brand() {
   return (
     <Link href="/leads" className="flex items-center gap-2.5 rounded-2xl px-1 py-1">
-      <span aria-hidden="true" className="flex size-9 items-center justify-center rounded-full bg-primary font-display text-base font-bold text-white">
-        S
-      </span>
+      {/* Sidebar only: a larger wheel in its circle (the Obsidian circle is invisible on the Obsidian rail). */}
+      <LiveWheelMark className="size-9" wheelClassName="size-[88%]" />
       <span className="font-display text-lg tracking-tight">
         Showroom <span className="font-bold">CRM</span>
       </span>
@@ -126,8 +126,9 @@ export function BottomNav({ isAdmin }: { isAdmin: boolean }) {
             return (
               <li
                 key={item.href}
-                className={cn("min-w-0 transition-[flex-grow] duration-300 ease-[var(--ease-standard)]", active ? "grow-[1.6]" : "grow")}
-                style={{ flexBasis: 0 }}
+                // Selected pill sizes to its full label (never truncated); the other tabs share the rest equally.
+                className={cn("min-w-0", active ? "shrink-0" : "grow")}
+                style={{ flexBasis: active ? "auto" : 0 }}
               >
                 <Link
                   href={item.href}
@@ -142,7 +143,8 @@ export function BottomNav({ isAdmin }: { isAdmin: boolean }) {
                   <span className="shrink-0">{item.icon(active ? 18 : 20)}</span>
                   <span
                     className={cn(
-                      "truncate whitespace-nowrap leading-none",
+                      "whitespace-nowrap leading-none",
+                      !active && "truncate",
                       active ? "text-[0.8125rem] font-semibold" : "text-[0.6875rem] font-medium",
                     )}
                   >

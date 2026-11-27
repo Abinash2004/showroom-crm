@@ -6,6 +6,7 @@ import { useTransition } from "react";
 import { BackIcon, RefreshIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { initials } from "@/lib/format";
+import { BusyIndicator, useBusySignal } from "./busy";
 import { useViewer } from "./viewer";
 
 interface AppBarProps {
@@ -24,6 +25,7 @@ export function AppBar({ title, backHref, parent, actions }: AppBarProps) {
   const router = useRouter();
   const viewer = useViewer();
   const [pending, startTransition] = useTransition();
+  useBusySignal(pending);
 
   return (
     <header className="sticky top-0 z-30 bg-bg pt-[env(safe-area-inset-top)]">
@@ -48,14 +50,21 @@ export function AppBar({ title, backHref, parent, actions }: AppBarProps) {
           </div>
         )}
         {actions}
-        <button
-          type="button"
-          onClick={() => startTransition(() => router.refresh())}
-          aria-label="Refresh"
-          className={cn(circle, "bg-surface-2 hover:bg-surface-2-hover")}
-        >
-          <RefreshIcon width={18} height={18} className={cn(pending && "animate-spin")} />
-        </button>
+        {/*
+          While something is pending the wheel sits exactly over Refresh (no one refreshes mid-request),
+          so the bar never shifts. pointer-events-none: nothing is disabled, taps still reach the button.
+        */}
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => startTransition(() => router.refresh())}
+            aria-label="Refresh"
+            className={cn(circle, "bg-surface-2 hover:bg-surface-2-hover")}
+          >
+            <RefreshIcon width={18} height={18} className={cn(pending && "animate-spin")} />
+          </button>
+          <BusyIndicator className="pointer-events-none absolute inset-0 z-10" />
+        </div>
         <Link
           href="/account"
           aria-label={`Account: ${viewer.name}`}

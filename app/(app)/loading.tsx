@@ -1,11 +1,13 @@
 import { Skeleton } from "@/components/ui/card";
+import { WheelLoader } from "@/components/layout/busy";
 
 export default function Loading() {
   return (
     <div role="status" aria-label="Loading">
       <div className="mx-auto flex h-16 max-w-5xl items-center gap-3 px-4">
         <Skeleton className="h-8 flex-1 rounded-full" />
-        <Skeleton className="size-11 rounded-full" />
+        {/* In the Refresh slot, like the app bar's wheel: the tap was received, the next screen is on its way. */}
+        <WheelLoader />
         <Skeleton className="size-11 rounded-full" />
       </div>
       <div className="mx-auto max-w-5xl space-y-3 px-4 py-4">

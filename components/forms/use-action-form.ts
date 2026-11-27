@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { z } from "zod";
 import type { ActionError, ActionResult } from "@/lib/errors";
 import { formDataToObject } from "@/lib/validators/parse";
+import { useBusySignal } from "@/components/layout/busy";
 
 interface FormState {
   error: ActionError | null;
@@ -42,6 +43,7 @@ export function useActionForm(schema: z.ZodType, action: (fd: FormData) => Promi
     if (result.ok) return { error: null, values: {}, successCount: prev.successCount + 1 };
     return { ...prev, values, error: result.error };
   }, INITIAL);
+  useBusySignal(pending);
 
   return {
     formAction,

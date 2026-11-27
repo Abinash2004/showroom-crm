@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AppBar } from "@/components/layout/app-bar";
+import { FormBusySignal } from "@/components/layout/busy";
 import { PageBody } from "@/components/layout/page";
 import { Button } from "@/components/ui/button";
 import { LogOutIcon, StoreIcon } from "@/components/icons";
@@ -54,6 +55,7 @@ export default async function AccountPage() {
         </section>
 
         <form action={logoutAction}>
+          <FormBusySignal />
           {/* `!`: the ink variant sets text-white; sign out reads in the same red as Deactivate. */}
           <Button type="submit" variant="ink" className="w-full text-[var(--danger-on-ink)]!">
             <LogOutIcon width={18} height={18} aria-hidden="true" /> Sign out

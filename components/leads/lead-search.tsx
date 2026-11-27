@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useBusySignal } from "@/components/layout/busy";
 import { CloseIcon, SearchIcon, Spinner } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { buildHref } from "@/lib/url";
@@ -25,6 +26,7 @@ export function LeadSearch({ query, base, path = "/leads", label = "Search leads
   const [syncedQuery, setSyncedQuery] = useState(query);
   const [lastPushed, setLastPushed] = useState(query);
   const [pending, startTransition] = useTransition();
+  useBusySignal(pending);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
 
