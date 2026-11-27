@@ -50,6 +50,11 @@ export interface LeadDTO {
   updatedAt: string;
 }
 
+/** A lead row on the list: the lead plus how many interactions it has. */
+export interface LeadListItem extends LeadDTO {
+  interactionCount: number;
+}
+
 export interface InteractionDTO {
   id: string;
   leadId: string;
@@ -63,14 +68,13 @@ export interface InteractionDTO {
 
 export interface InteractionReportRow extends InteractionDTO {
   customerName: string;
-  /** Location of the lead's branch (shown next to the branch name). */
-  branchLocation: string;
+  customerPhone: string;
+  /** The lead's current status (not its status when this follow-up was logged). */
+  leadStatus: LeadStatus;
   /** 1-based position of this follow-up in its lead's history (oldest first, by date then creation). */
   sequence: number;
   /** Number of follow-ups the lead has in total. */
   sequenceTotal: number;
-  branchId: string;
-  branchName: string;
 }
 
 export interface ActivityDTO {

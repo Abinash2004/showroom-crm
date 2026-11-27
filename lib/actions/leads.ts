@@ -7,13 +7,12 @@ import { requireWriteActor } from "@/lib/auth/session";
 import { formDataToObject, parseInput } from "@/lib/validators/parse";
 import {
   interactionCreateSchema,
-  interactionUpdateSchema,
   leadCreateSchema,
   leadEditSchema,
 } from "@/lib/validators/entities";
 import { objectIdSchema } from "@/lib/validators/common";
 import { createLead, updateLead } from "@/lib/db/repositories/leads";
-import { createInteraction, updateInteraction } from "@/lib/db/repositories/interactions";
+import { createInteraction } from "@/lib/db/repositories/interactions";
 import { runAction } from "./run";
 
 export async function createLeadAction(formData: FormData): Promise<ActionResult> {
@@ -48,20 +47,6 @@ export async function createInteractionAction(formData: FormData): Promise<Actio
     const input = parseInput(interactionCreateSchema, formDataToObject(formData));
     await createInteraction(actor, input, req.ip);
     return input.leadId;
-  });
-  if (!result.ok) return result;
-  revalidatePath(`/leads/${result.data}`);
-  revalidatePath("/interactions");
-  return { ok: true, data: undefined };
-}
-
-export async function updateInteractionAction(leadId: string, formData: FormData): Promise<ActionResult> {
-  const result = await runAction(async () => {
-    const { actor, req } = await requireWriteActor();
-    const lead = parseInput(objectIdSchema, leadId);
-    const input = parseInput(interactionUpdateSchema, formDataToObject(formData));
-    await updateInteraction(actor, input, req.ip);
-    return lead;
   });
   if (!result.ok) return result;
   revalidatePath(`/leads/${result.data}`);

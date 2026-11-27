@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState, useSyncExternalStore } from "react";
 import { CalendarIcon, EyeIcon, EyeOffIcon } from "@/components/icons";
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 import type { ActionError } from "@/lib/errors";
 import { cn } from "@/lib/cn";
+import { formatStamp } from "@/lib/format";
 
 /** Tactile pebble input (see `.field` in globals.css for rest/focus/invalid states). */
 const control = "field min-h-12 w-full px-4 py-3 text-base";
@@ -59,112 +60,37 @@ export function TextField({ label, error, hint, className, ...props }: CommonPro
   );
 }
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const DISPLAY_DATE = /^(\d{2})-(\d{2})-(\d{4})$/;
-
-/** yyyy-mm-dd (the value the server receives) to dd-mm-yyyy (what the user sees). */
-function isoToDisplay(iso: string): string {
-  if (!ISO_DATE.test(iso)) return "";
-  const [y, m, d] = iso.split("-");
-  return `${d}-${m}-${y}`;
+/** Minute clock shared by every StampField showing "now": one timer for the whole page. */
+const MINUTE_MS = 60_000;
+function subscribeMinute(onTick: () => void) {
+  const id = setInterval(onTick, 15_000);
+  return () => clearInterval(id);
 }
-
-/** dd-mm-yyyy to yyyy-mm-dd, or "" when it isn't a real calendar date. */
-function displayToIso(text: string): string {
-  const m = DISPLAY_DATE.exec(text);
-  if (!m) return "";
-  const [, d, mo, y] = m;
-  const iso = `${y}-${mo}-${d}`;
-  const parsed = new Date(`${iso}T00:00:00Z`);
-  return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== iso ? "" : iso;
-}
-
-/** Keeps only digits and inserts the dashes as the user types: 2 digits, dash, 2 digits, dash, 4 digits. */
-function maskDisplay(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 8);
-  const parts = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)].filter(Boolean);
-  return parts.join("-");
-}
-
-interface DateFieldProps {
-  label: string;
-  name: string;
-  required?: boolean;
-  /** Latest allowed date, yyyy-mm-dd (today for every date field here). */
-  max?: string;
-  /** Initial value, yyyy-mm-dd. */
-  defaultValue?: string;
-  error?: string;
-}
+const currentMinute = () => Math.floor(Date.now() / MINUTE_MS);
+const noMinute = () => null;
 
 /**
- * Date input that always shows dd-mm-yyyy, whatever the device locale. Typing is masked; a calendar
- * button opens the native picker, which fills the same text. The hidden field submits yyyy-mm-dd, so the
- * server schemas and actions are unchanged.
+ * Read-only current date and time, e.g. "29 Nov 2026 | 08:00 PM" (showroom time), kept up to date while the
+ * form is open. Nothing is submitted: the server stamps the real time when it saves.
  */
-export function DateField({ label, name, required, max, defaultValue = "", error }: DateFieldProps) {
-  const [text, setText] = useState(() => isoToDisplay(defaultValue));
-  const pickerRef = useRef<HTMLInputElement>(null);
-  const hiddenRef = useRef<HTMLInputElement>(null);
-  const iso = displayToIso(text);
-
-  // The submitted value lives in the hidden input and only updates after React renders. Forms that read their
-  // fields on input events (the lead editor's change counter) would see the previous value, so announce the
-  // new one once it is committed. Skipped on mount.
-  const announced = useRef(iso);
-  useEffect(() => {
-    if (announced.current === iso) return;
-    announced.current = iso;
-    hiddenRef.current?.dispatchEvent(new Event("input", { bubbles: true }));
-  }, [iso]);
-  const incomplete = text.length === 10 && !iso;
-  const tooLate = Boolean(iso && max && iso > max);
-  const message = error ?? (incomplete ? "Enter a real date as dd-mm-yyyy." : tooLate ? "Date can't be in the future." : undefined);
-
+export function StampField({ label }: { label: string }) {
+  const minute = useSyncExternalStore(subscribeMinute, currentMinute, noMinute);
+  const shown = minute === null ? "" : formatStamp(new Date(minute * MINUTE_MS).toISOString());
   return (
-    <Shell label={label} error={message} required={required}>
-      {({ id, describedBy, invalid }) => (
+    <Shell label={label}>
+      {({ id, describedBy }) => (
         <div className="relative">
           <input
             id={id}
             type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="dd-mm-yyyy"
-            maxLength={10}
-            value={text}
-            onChange={(e) => setText(maskDisplay(e.target.value))}
-            aria-invalid={invalid}
-            aria-describedby={describedBy}
-            className={cn(control, "pr-14 tabular-nums")}
-          />
-          <input ref={hiddenRef} type="hidden" name={name} value={iso} readOnly />
-          <input
-            ref={pickerRef}
-            type="date"
+            readOnly
             tabIndex={-1}
-            aria-hidden="true"
-            className="sr-only"
-            max={max}
-            value={iso}
-            onChange={(e) => setText(isoToDisplay(e.target.value))}
+            value={shown}
+            placeholder="Now"
+            aria-describedby={describedBy}
+            className={cn(control, "cursor-default pr-12 tabular-nums text-fg/80 focus:bg-surface-2")}
           />
-          <button
-            type="button"
-            aria-label={`Open calendar for ${label}`}
-            onClick={() => {
-              const el = pickerRef.current;
-              if (!el) return;
-              try {
-                el.showPicker();
-              } catch {
-                el.focus();
-              }
-            }}
-            className="press absolute right-1 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:text-fg"
-          >
-            <CalendarIcon width={20} height={20} aria-hidden="true" />
-          </button>
+          <CalendarIcon aria-hidden="true" width={18} height={18} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted" />
         </div>
       )}
     </Shell>

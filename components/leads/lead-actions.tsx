@@ -12,7 +12,7 @@ import { InteractionForm } from "./interaction-form";
  * an inline button beside the Interactions heading from 768px up. Opens the form in a sheet with the
  * outcome box focused, so the keyboard is already up.
  */
-export function LogInteractionSheet({ leadId, today }: { leadId: string; today: string }) {
+export function LogInteractionSheet({ leadId }: { leadId: string }) {
   const [open, setOpen] = useState(false);
   const body = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setOpen(false), []);
@@ -39,7 +39,7 @@ export function LogInteractionSheet({ leadId, today }: { leadId: string; today: 
         </button>
       }
     >
-      <div ref={body}>{open ? <InteractionForm leadId={leadId} today={today} onDone={close} /> : null}</div>
+      <div ref={body}>{open ? <InteractionForm leadId={leadId} onDone={close} /> : null}</div>
     </Sheet>
   );
 }

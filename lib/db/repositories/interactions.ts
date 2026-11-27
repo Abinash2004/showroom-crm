@@ -1,19 +1,18 @@
 import "server-only";
 import type { Types } from "mongoose";
 import { connectDb } from "../connection";
-import { BranchModel, InteractionModel, LeadModel, UserModel } from "../models";
-import { branchScope, canAccessBranch, dateRange, iso, oid, pageWindow } from "../helpers";
+import { InteractionModel, LeadModel, UserModel } from "../models";
+import { branchScope, canAccessBranch, iso, localDayRange, oid, pageWindow } from "../helpers";
 import { customerSearchFilter } from "./leads";
 import { logActivity } from "../activity";
 import { AppError } from "@/lib/errors";
-import { computeChanges, creationChanges } from "@/lib/diff";
+import { creationChanges } from "@/lib/diff";
 import { FOLLOW_UP_PAGE_SIZE } from "@/lib/constants";
+import type { LeadStatus } from "@/lib/constants";
 import type { Actor, InteractionDTO, InteractionReportRow, Page } from "@/lib/types";
-import { parseIsoDate } from "@/lib/validators/common";
 import type {
   InteractionCreateInput,
   InteractionFilters,
-  InteractionUpdateInput,
 } from "@/lib/validators/entities";
 
 interface LeanInteraction {
@@ -68,7 +67,8 @@ export async function createInteraction(actor: Actor, input: InteractionCreateIn
   const doc = await InteractionModel.create({
     leadId: oid(input.leadId),
     outcome: input.outcome,
-    date: parseIsoDate(input.date),
+    // Stamped by the server, never taken from the client.
+    date: new Date(),
     actionBy: oid(actor.id),
     createdBy: oid(actor.id),
     updatedBy: oid(actor.id),
@@ -85,36 +85,8 @@ export async function createInteraction(actor: Actor, input: InteractionCreateIn
   return dto;
 }
 
-export async function updateInteraction(actor: Actor, input: InteractionUpdateInput, ip: string): Promise<InteractionDTO> {
-  await connectDb();
-  const before = await InteractionModel.findById(oid(input.id)).lean<LeanInteraction>();
-  if (!before) throw new AppError("NOT_FOUND", "Interaction not found.");
-  await assertLeadAccess(actor, before.leadId.toHexString());
-  const after = await InteractionModel.findByIdAndUpdate(
-    before._id,
-    { $set: { outcome: input.outcome, date: parseIsoDate(input.date), updatedBy: oid(actor.id) } },
-    { returnDocument: "after", lean: true },
-  );
-  if (!after) throw new AppError("NOT_FOUND", "Interaction not found.");
-  const changes = computeChanges({ ...before }, { ...after }, AUDIT_FIELDS);
-  if (Object.keys(changes).length > 0) {
-    await logActivity({ entity: "interaction", entityId: input.id, action: "update", changes, actionBy: actor.id, actionIP: ip });
-  }
-  const names = await userNameMap([before.actionBy]);
-  return toDTO(after as unknown as LeanInteraction, names);
-}
-
 interface ReportRow extends LeanInteraction {
-  lead: { customerName: string; branchId: Types.ObjectId };
-}
-
-/** Branch name + location for a page of rows: one `$in` query, hash-map lookups per row (O(1)). */
-async function branchInfoMap(branchIds: Types.ObjectId[]): Promise<Map<string, { name: string; location: string }>> {
-  const unique = [...new Map(branchIds.map((b) => [b.toHexString(), b])).values()];
-  const rows = await BranchModel.find({ _id: { $in: unique } }, { name: 1, location: 1 }).lean<
-    { _id: Types.ObjectId; name: string; location: string }[]
-  >();
-  return new Map(rows.map((r) => [r._id.toHexString(), { name: r.name, location: r.location }]));
+  lead: { customerName: string; customerPhone: string; status: LeadStatus };
 }
 
 /**
@@ -166,7 +138,8 @@ export async function interactionReport(actor: Actor, filters: InteractionFilter
   if (filters.branchId) leadMatch.branchId = oid(filters.branchId);
   if (filters.q) Object.assign(leadMatch, customerSearchFilter(filters.q));
   const match: Record<string, unknown> = {};
-  const range = dateRange(filters.from, filters.to);
+  // Interaction dates are timestamps: filter by showroom-local (IST) days.
+  const range = localDayRange(filters.from, filters.to);
   if (range) match.date = range;
   const { skip, limit } = pageWindow(filters.page, FOLLOW_UP_PAGE_SIZE);
 
@@ -176,7 +149,7 @@ export async function interactionReport(actor: Actor, filters: InteractionFilter
       localField: "leadId",
       foreignField: "_id",
       as: "lead",
-      pipeline: [{ $match: leadMatch }, { $project: { customerName: 1, branchId: 1 } }],
+      pipeline: [{ $match: leadMatch }, { $project: { customerName: 1, customerPhone: 1, status: 1 } }],
     },
   };
 
@@ -194,11 +167,7 @@ export async function interactionReport(actor: Actor, filters: InteractionFilter
   const rows = result?.rows ?? [];
   const total = result?.total[0]?.n ?? 0;
 
-  const [users, branches, positions] = await Promise.all([
-    userNameMap(rows.map((r) => r.actionBy)),
-    branchInfoMap(rows.map((r) => r.lead.branchId)),
-    sequenceMap(rows),
-  ]);
+  const [users, positions] = await Promise.all([userNameMap(rows.map((r) => r.actionBy)), sequenceMap(rows)]);
   return {
     total,
     page: filters.page,
@@ -206,9 +175,8 @@ export async function interactionReport(actor: Actor, filters: InteractionFilter
     items: rows.map((r) => ({
       ...toDTO(r, users),
       customerName: r.lead.customerName,
-      branchId: r.lead.branchId.toHexString(),
-      branchName: branches.get(r.lead.branchId.toHexString())?.name ?? "Unknown branch",
-      branchLocation: branches.get(r.lead.branchId.toHexString())?.location ?? "",
+      customerPhone: r.lead.customerPhone,
+      leadStatus: r.lead.status,
       sequence: positions.get(r._id.toHexString())?.n ?? 1,
       sequenceTotal: positions.get(r._id.toHexString())?.total ?? 1,
     })),

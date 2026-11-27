@@ -41,7 +41,3 @@ export const checkboxSchema = z.preprocess(
   (v) => v === true || v === "on" || v === "true",
   z.boolean(),
 );
-
-export function parseIsoDate(value: string): Date {
-  return new Date(`${value}T00:00:00.000Z`);
-}

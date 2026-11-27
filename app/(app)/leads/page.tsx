@@ -4,6 +4,7 @@ import { PageBody } from "@/components/layout/page";
 import { BranchSwitcher } from "@/components/leads/branch-switcher";
 import { ChipLink } from "@/components/leads/chip-link";
 import { ChipRow } from "@/components/leads/chip-row";
+import { InteractionDial } from "@/components/leads/interaction-dial";
 import { LeadList } from "@/components/leads/lead-list";
 import { StickyHeader } from "@/components/leads/sticky-header";
 import { DateRangeSheet } from "@/components/leads/date-range-sheet";
@@ -45,6 +46,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const base = {
     q: filters.q,
     status: statusKey,
+    interactions: filters.interactions,
     branchId: filters.branchId,
     from: filters.from,
     to: filters.to,
@@ -57,7 +59,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const customActive = Boolean((filters.from || filters.to) && !activePreset);
   // Branch is the scope (shown in its chip), not a refinement: the empty-state reset keeps it.
   const clearHref = buildHref("/leads", { status: statusKey, branchId: filters.branchId });
-  const anyFilter = Boolean(filters.q || filters.from || filters.to);
+  const anyFilter = Boolean(filters.q || filters.from || filters.to || filters.interactions);
   const renderPreset = (p: DatePreset) => {
     const active = activePreset?.id === p.id;
     return (
@@ -77,7 +79,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const dateSheet = (
     <li className={CHIP_ITEM}>
       <DateRangeSheet
-        base={{ q: filters.q, status: statusKey, branchId: filters.branchId }}
+        base={{ q: filters.q, status: statusKey, interactions: filters.interactions, branchId: filters.branchId }}
         from={filters.from}
         to={filters.to}
         today={today}
@@ -96,7 +98,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       <div className="flex items-center gap-2.5">
         <LeadSearch
           query={filters.q ?? ""}
-          base={{ status: statusKey, branchId: filters.branchId, from: filters.from, to: filters.to }}
+          base={{ status: statusKey, interactions: filters.interactions, branchId: filters.branchId, from: filters.from, to: filters.to }}
         />
         {branches.length > 1 ? (
           // Capped at 45% so the search box keeps room to type; long names truncate.
@@ -104,7 +106,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
             <BranchSwitcher
               branches={branches.map((b) => ({ id: b.id, name: b.name, location: b.location, isActive: b.isActive }))}
               selectedId={filters.branchId}
-              base={{ q: filters.q, status: statusKey, from: filters.from, to: filters.to }}
+              base={{ q: filters.q, status: statusKey, interactions: filters.interactions, from: filters.from, to: filters.to }}
               className="max-w-full"
             />
           </div>
@@ -136,6 +138,9 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     </section>
   );
 
+  // Interaction count dial, at the right of the "1-10 of 16 leads" row.
+  const interactionFilter = <InteractionDial value={filters.interactions} base={{ ...base, interactions: undefined }} />;
+
   return (
     <>
       <AppBar title="Leads" />
@@ -145,9 +150,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         {result.items.length === 0 ? (
           <StickyHeader>
             {filtersSection}
-            <p className="mt-3 text-sm text-muted" aria-live="polite">
-              No leads{filters.q ? ` for "${filters.q}"` : ""}
-            </p>
+            <div className="mt-2 flex min-h-12 items-center justify-between gap-3">
+              <p className="min-w-0 truncate text-sm text-muted" aria-live="polite">
+                No leads{filters.q ? ` for "${filters.q}"` : ""}
+              </p>
+              {interactionFilter}
+            </div>
           </StickyHeader>
         ) : null}
 
@@ -167,6 +175,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
             params={base}
             query={filters.q}
             header={filtersSection}
+            countAside={interactionFilter}
             pagination={
               <Pagination
                 page={result.page}

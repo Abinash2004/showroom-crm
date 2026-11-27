@@ -27,6 +27,15 @@ export const ListIcon = (p: SVGProps<SVGSVGElement>) => (
 export const PlusIcon = (p: SVGProps<SVGSVGElement>) => (
   <Icon {...p}><path d="M12 5v14M5 12h14" /></Icon>
 );
+/** Motorbike, side view (outline from Tabler Icons "motorbike", MIT licence). */
+export const TwoWheelerIcon = (p: SVGProps<SVGSVGElement>) => (
+  <Icon {...p}>
+    <circle cx="5" cy="16" r="3" />
+    <circle cx="19" cy="16" r="3" />
+    <path d="M7.5 14h5l4-4H6m1.5 4 4-4" />
+    <path d="M13 6h2l1.5 3 2 4" />
+  </Icon>
+);
 export const ChatIcon = (p: SVGProps<SVGSVGElement>) => (
   <Icon {...p}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></Icon>
 );

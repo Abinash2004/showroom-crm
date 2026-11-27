@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LEAD_STATUSES, ACTIVITY_ENTITIES } from "@/lib/constants";
+import { LEAD_STATUSES, ACTIVITY_ENTITIES, INTERACTION_BUCKETS } from "@/lib/constants";
 import { employeeCodeSchema } from "./auth";
 import {
   isoDateSchema,
@@ -43,31 +43,26 @@ export const userCreateSchema = z
 export const userUpdateSchema = z.object(userBaseShape).refine(needsBranch, needsBranchIssue);
 
 /* ---------- Lead ---------- */
+// Visit date is not an input: the server stamps it with the current date and time when the lead is created.
 export const leadCreateSchema = z.object({
   branchId: objectIdSchema,
-  visitDate: isoDateSchema,
   customerName: requiredText("Customer name", 100),
   customerPhone: phoneSchema,
   alternativePhone: optionalPhoneSchema,
   customerLocation: optionalText(200),
   vehicleDetails: optionalText(500),
 });
-export const leadUpdateSchema = leadCreateSchema.omit({ branchId: true });
-/** Lead details card: details plus optional status and branch, saved together in one update. */
-export const leadEditSchema = leadUpdateSchema.extend({
-  status: leadStatusSchema.optional(),
-  branchId: objectIdSchema.optional(),
+/** After creation only status, customer location and vehicle details can change (for every user, admins included). */
+export const leadEditSchema = z.object({
+  status: leadStatusSchema,
+  customerLocation: optionalText(200),
+  vehicleDetails: optionalText(500),
 });
 
 /* ---------- Interaction ---------- */
+// Interactions are write-once: logged with a server timestamp, never edited. Date is not an input.
 export const interactionCreateSchema = z.object({
   leadId: objectIdSchema,
-  date: isoDateSchema,
-  outcome: requiredText("Outcome", 2000),
-});
-export const interactionUpdateSchema = z.object({
-  id: objectIdSchema,
-  date: isoDateSchema,
   outcome: requiredText("Outcome", 2000),
 });
 
@@ -86,6 +81,7 @@ const filterPage = z.preprocess(firstValue, z.coerce.number().int().min(1).max(1
 export const leadFilterSchema = z.object({
   q: filterText,
   status: z.preprocess(blankToUndefined, z.enum(LEAD_STATUSES).optional()).catch(undefined),
+  interactions: z.preprocess(blankToUndefined, z.enum(INTERACTION_BUCKETS).optional()).catch(undefined),
   branchId: filterId,
   from: filterDate,
   to: filterDate,
@@ -112,9 +108,8 @@ export type BranchUpdateInput = z.output<typeof branchUpdateSchema>;
 export type UserCreateInput = z.output<typeof userCreateSchema>;
 export type UserUpdateInput = z.output<typeof userUpdateSchema>;
 export type LeadCreateInput = z.output<typeof leadCreateSchema>;
-export type LeadUpdateInput = z.output<typeof leadUpdateSchema>;
+export type LeadEditInput = z.output<typeof leadEditSchema>;
 export type InteractionCreateInput = z.output<typeof interactionCreateSchema>;
-export type InteractionUpdateInput = z.output<typeof interactionUpdateSchema>;
 export type LeadFilters = z.output<typeof leadFilterSchema>;
 export type InteractionFilters = z.output<typeof interactionFilterSchema>;
 export type ActivityFilters = z.output<typeof activityFilterSchema>;

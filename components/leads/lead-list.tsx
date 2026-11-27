@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadLeadsPageAction } from "@/lib/actions/lead-list";
 import { Skeleton } from "@/components/ui/card";
-import type { LeadDTO, Page } from "@/lib/types";
+import type { LeadListItem, Page } from "@/lib/types";
 import { LeadCard } from "./lead-card";
 import { StickyHeader } from "./sticky-header";
 
 interface LeadListProps {
   /** First page, rendered on the server. */
-  initial: Page<LeadDTO>;
+  initial: Page<LeadListItem>;
   /** Active filters (q, status, branchId, from, to), sent back when loading more. */
   params: Record<string, string | undefined>;
   query?: string;
@@ -17,6 +17,8 @@ interface LeadListProps {
   header: React.ReactNode;
   /** Previous/Next links, shown from 768px up. */
   pagination: React.ReactNode;
+  /** Shown at the right end of the "1-10 of 16 leads" row (the interaction count dial). */
+  countAside?: React.ReactNode;
 }
 
 type LoadState = "idle" | "loading" | "error";
@@ -25,7 +27,7 @@ type LoadState = "idle" | "loading" | "error";
  * Phones: infinite scroll, 10 leads at a time, triggered when the end of the list comes near.
  * Tablet/desktop: the server-rendered page plus Previous/Next links.
  */
-export function LeadList({ initial, params, query, header, pagination }: LeadListProps) {
+export function LeadList({ initial, params, query, header, pagination, countAside }: LeadListProps) {
   const [items, setItems] = useState(initial.items);
   const [page, setPage] = useState(initial.page);
   const [total, setTotal] = useState(initial.total);
@@ -86,17 +88,20 @@ export function LeadList({ initial, params, query, header, pagination }: LeadLis
     <>
       <StickyHeader>
         {header}
-        <p className="mt-3 text-sm text-muted" aria-live="polite">
-          {total === 0 ? (
-            "No leads"
-          ) : (
-            <>
-              <span className="md:hidden">{`${items.length} of ${total} ${noun}`}</span>
-              <span className="max-md:hidden">{`${first}-${last} of ${total} ${noun}`}</span>
-            </>
-          )}
-          {suffix}
-        </p>
+        <div className="mt-2 flex min-h-12 items-center justify-between gap-3">
+          <p className="min-w-0 truncate text-sm text-muted" aria-live="polite">
+            {total === 0 ? (
+              "No leads"
+            ) : (
+              <>
+                <span className="md:hidden">{`${items.length} of ${total} ${noun}`}</span>
+                <span className="max-md:hidden">{`${first}-${last} of ${total} ${noun}`}</span>
+              </>
+            )}
+            {suffix}
+          </p>
+          {countAside}
+        </div>
       </StickyHeader>
 
       <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">

@@ -5,7 +5,6 @@ import { LeadForm } from "@/components/leads/lead-form";
 import { EmptyState, Panel } from "@/components/ui/card";
 import { requireActor } from "@/lib/auth/session";
 import { listBranches } from "@/lib/db/repositories/branches";
-import { todayInputDate } from "@/lib/format";
 
 export const metadata: Metadata = { title: "New lead" };
 
@@ -20,7 +19,7 @@ export default async function NewLeadPage() {
           <EmptyState title="No active branch available">Ask an administrator to assign you to an active branch.</EmptyState>
         ) : (
           <Panel className="mx-auto max-w-2xl">
-            <LeadForm branches={branches} today={todayInputDate()} />
+            <LeadForm branches={branches} />
           </Panel>
         )}
       </PageBody>

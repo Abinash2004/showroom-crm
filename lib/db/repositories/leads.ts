@@ -1,16 +1,15 @@
 import "server-only";
-import type { Types } from "mongoose";
+import type { PipelineStage, Types } from "mongoose";
 import { connectDb } from "../connection";
-import { BranchModel, LeadModel } from "../models";
-import { branchScope, canAccessBranch, dateRange, escapeRegex, iso, oid, pageWindow } from "../helpers";
+import { BranchModel, InteractionModel, LeadModel } from "../models";
+import { branchScope, canAccessBranch, escapeRegex, iso, localDayRange, oid, pageWindow } from "../helpers";
 import { logActivity } from "../activity";
 import { AppError } from "@/lib/errors";
 import { computeChanges, creationChanges } from "@/lib/diff";
 import { LEAD_PAGE_SIZE, LEAD_STATUSES } from "@/lib/constants";
-import type { LeadStatus } from "@/lib/constants";
-import type { Actor, LeadDTO, Page } from "@/lib/types";
-import { parseIsoDate } from "@/lib/validators/common";
-import type { LeadCreateInput, LeadFilters, LeadUpdateInput } from "@/lib/validators/entities";
+import type { InteractionBucket, LeadStatus } from "@/lib/constants";
+import type { Actor, LeadDTO, LeadListItem, Page } from "@/lib/types";
+import type { LeadCreateInput, LeadEditInput, LeadFilters } from "@/lib/validators/entities";
 
 export interface LeanLead {
   _id: Types.ObjectId;
@@ -75,7 +74,29 @@ export async function branchNameMap(branchIds: Types.ObjectId[]): Promise<Map<st
   return new Map(rows.map((r) => [r._id.toHexString(), r.name]));
 }
 
-type LeadQuery = Partial<Pick<LeadFilters, "q" | "status" | "branchId" | "from" | "to">>;
+type LeadQuery = Partial<Pick<LeadFilters, "q" | "status" | "branchId" | "from" | "to" | "interactions">>;
+
+/**
+ * Pipeline stages that keep only leads with the chosen number of interactions: exactly 0, 1 or 2, or more than 2.
+ * Each lead's interactions are counted through the { leadId, date, _id } index (an equality lookup per lead).
+ * Only used while the filter is on; the plain list keeps its indexed find + sort.
+ */
+function interactionStages(bucket: InteractionBucket): PipelineStage[] {
+  return [
+    {
+      $lookup: {
+        from: InteractionModel.collection.name,
+        localField: "_id",
+        foreignField: "leadId",
+        as: "ix",
+        pipeline: [{ $project: { _id: 1 } }],
+      },
+    },
+    { $addFields: { interactionCount: { $size: "$ix" } } },
+    { $project: { ix: 0 } },
+    { $match: { interactionCount: bucket === "more" ? { $gt: 2 } : Number(bucket) } },
+  ];
+}
 
 function buildFilter(actor: Actor, f: LeadQuery): Record<string, unknown> {
   const filter: Record<string, unknown> = { ...branchScope(actor) };
@@ -84,7 +105,8 @@ function buildFilter(actor: Actor, f: LeadQuery): Record<string, unknown> {
     filter.branchId = oid(f.branchId);
   }
   if (f.status) filter.status = f.status;
-  const range = dateRange(f.from, f.to);
+  // Visit dates are timestamps: filter by showroom-local (IST) days.
+  const range = localDayRange(f.from, f.to);
   if (range) filter.visitDate = range;
   if (f.q) Object.assign(filter, customerSearchFilter(f.q));
   return filter;
@@ -103,17 +125,58 @@ export function customerSearchFilter(q: string): Record<string, unknown> {
   return { customerName: new RegExp(escapeRegex(q), "i") };
 }
 
-export async function listLeads(actor: Actor, filters: LeadFilters): Promise<Page<LeadDTO>> {
+/**
+ * Interactions per lead for one page of leads: a single grouped query on the { leadId, date, _id } index,
+ * returned as a hash map so each row is an O(1) lookup.
+ */
+async function interactionCountMap(leadIds: Types.ObjectId[]): Promise<Map<string, number>> {
+  if (leadIds.length === 0) return new Map();
+  const rows = await InteractionModel.aggregate<{ _id: Types.ObjectId; n: number }>([
+    { $match: { leadId: { $in: leadIds } } },
+    { $group: { _id: "$leadId", n: { $sum: 1 } } },
+  ]);
+  return new Map(rows.map((r) => [r._id.toHexString(), r.n]));
+}
+
+export async function listLeads(actor: Actor, filters: LeadFilters): Promise<Page<LeadListItem>> {
   await connectDb();
   const filter = buildFilter(actor, filters);
   const { skip, limit } = pageWindow(filters.page, LEAD_PAGE_SIZE);
+
+  if (filters.interactions) {
+    // Rows come back with their count already attached, so no second count query is needed.
+    const [result] = await LeadModel.aggregate<{ rows: (LeanLead & { interactionCount: number })[]; total: { n: number }[] }>([
+      { $match: filter },
+      ...interactionStages(filters.interactions),
+      {
+        $facet: {
+          rows: [{ $sort: { visitDate: -1, _id: -1 } }, { $skip: skip }, { $limit: limit }, { $project: { ...PROJECTION, interactionCount: 1 } }],
+          total: [{ $count: "n" }],
+        },
+      },
+    ]);
+    const rows = result?.rows ?? [];
+    const names = await branchNameMap(rows.map((r) => r.branchId));
+    return {
+      items: rows.map((r) => ({ ...toDTO(r, names), interactionCount: r.interactionCount })),
+      total: result?.total[0]?.n ?? 0,
+      page: filters.page,
+      pageSize: LEAD_PAGE_SIZE,
+    };
+  }
+
   // Most recent visit first, served by the { branchId, visitDate, _id } index.
   const [rows, total] = await Promise.all([
     LeadModel.find(filter, PROJECTION).sort({ visitDate: -1, _id: -1 }).skip(skip).limit(limit).lean<LeanLead[]>(),
     LeadModel.countDocuments(filter),
   ]);
-  const names = await branchNameMap(rows.map((r) => r.branchId));
-  return { items: rows.map((r) => toDTO(r, names)), total, page: filters.page, pageSize: LEAD_PAGE_SIZE };
+  const [names, counts] = await Promise.all([branchNameMap(rows.map((r) => r.branchId)), interactionCountMap(rows.map((r) => r._id))]);
+  return {
+    items: rows.map((r) => ({ ...toDTO(r, names), interactionCount: counts.get(r._id.toHexString()) ?? 0 })),
+    total,
+    page: filters.page,
+    pageSize: LEAD_PAGE_SIZE,
+  };
 }
 
 /** Lead counts per status for the current search/date/branch filters (status itself ignored). One aggregation. */
@@ -122,6 +185,7 @@ export async function leadStatusCounts(actor: Actor, filters: Omit<LeadQuery, "s
   const match = buildFilter(actor, { q: filters.q, branchId: filters.branchId, from: filters.from, to: filters.to });
   const rows = await LeadModel.aggregate<{ _id: LeadStatus; n: number }>([
     { $match: match },
+    ...(filters.interactions ? interactionStages(filters.interactions) : []),
     { $group: { _id: "$status", n: { $sum: 1 } } },
   ]);
   const counts = Object.fromEntries(LEAD_STATUSES.map((s) => [s, 0])) as Record<LeadStatus, number>;
@@ -146,7 +210,8 @@ export async function createLead(actor: Actor, input: LeadCreateInput, ip: strin
 
   const doc = await LeadModel.create({
     branchId: branch._id,
-    visitDate: parseIsoDate(input.visitDate),
+    // Stamped by the server, never taken from the client.
+    visitDate: new Date(),
     customerName: input.customerName,
     customerPhone: input.customerPhone,
     alternativePhone: input.alternativePhone ?? null,
@@ -168,65 +233,33 @@ export async function createLead(actor: Actor, input: LeadCreateInput, ip: strin
   return dto;
 }
 
-async function applyUpdate(actor: Actor, id: string, set: Record<string, unknown>, ip: string): Promise<LeadDTO> {
+/**
+ * The only change allowed after creation: status, customer location and vehicle details. Everything else
+ * (name, phones, branch, visit date) is fixed at creation, for every user including admins. One write and
+ * one activity-log entry with the changed fields.
+ */
+export async function updateLead(actor: Actor, id: string, input: LeadEditInput, ip: string): Promise<LeadDTO> {
   await connectDb();
   const scopedFilter = { _id: oid(id), ...branchScope(actor) };
   const before = await LeadModel.findOne(scopedFilter, PROJECTION).lean<LeanLead>();
   if (!before) throw new AppError("NOT_FOUND", "Lead not found.");
   const after = await LeadModel.findOneAndUpdate(
     scopedFilter,
-    { $set: { ...set, updatedBy: oid(actor.id) } },
-    { returnDocument: "after", lean: true, projection: PROJECTION },
-  );
+    {
+      $set: {
+        status: input.status,
+        customerLocation: input.customerLocation ?? null,
+        vehicleDetails: input.vehicleDetails ?? null,
+        updatedBy: oid(actor.id),
+      },
+    },
+    { returnDocument: "after", projection: PROJECTION },
+  ).lean<LeanLead>();
   if (!after) throw new AppError("NOT_FOUND", "Lead not found.");
   const changes = computeChanges({ ...before }, { ...after }, AUDIT_FIELDS);
   if (Object.keys(changes).length > 0) {
     await logActivity({ entity: "lead", entityId: id, action: "update", changes, actionBy: actor.id, actionIP: ip });
   }
-  // After a branch move the name must come from the new branch.
-  const names = await branchNameMap([(after as unknown as LeanLead).branchId]);
-  return toDTO(after as unknown as LeanLead, names);
-}
-
-/**
- * Details, plus status and branch when given: one write and one activity-log entry with every changed field.
- * A branch move is checked only when the branch actually changes: the target must be in the actor's scope
- * (all branches for admins, assigned ones otherwise) and active. Keeping a lead in its current inactive branch is fine.
- */
-export async function updateLead(
-  actor: Actor,
-  id: string,
-  input: LeadUpdateInput & { status?: LeadStatus; branchId?: string },
-  ip: string,
-): Promise<LeadDTO> {
-  let move: Types.ObjectId | undefined;
-  if (input.branchId) {
-    await connectDb();
-    const current = await LeadModel.findOne({ _id: oid(id), ...branchScope(actor) }, { branchId: 1 }).lean<{ branchId: Types.ObjectId }>();
-    if (!current) throw new AppError("NOT_FOUND", "Lead not found.");
-    if (current.branchId.toHexString() !== input.branchId) {
-      if (!canAccessBranch(actor, input.branchId)) {
-        throw new AppError("FORBIDDEN", "You do not have access to this branch.", { branchId: ["Not one of your branches"] });
-      }
-      const target = await BranchModel.findById(oid(input.branchId), { isActive: 1 }).lean<{ _id: Types.ObjectId; isActive: boolean }>();
-      if (!target) throw new AppError("VALIDATION", "Branch not found.", { branchId: ["Branch not found"] });
-      if (!target.isActive) throw new AppError("VALIDATION", "This branch is inactive.", { branchId: ["Branch is inactive"] });
-      move = target._id;
-    }
-  }
-  return applyUpdate(
-    actor,
-    id,
-    {
-      visitDate: parseIsoDate(input.visitDate),
-      customerName: input.customerName,
-      customerPhone: input.customerPhone,
-      alternativePhone: input.alternativePhone ?? null,
-      customerLocation: input.customerLocation ?? null,
-      vehicleDetails: input.vehicleDetails ?? null,
-      ...(input.status ? { status: input.status } : {}),
-      ...(move ? { branchId: move } : {}),
-    },
-    ip,
-  );
+  const names = await branchNameMap([after.branchId]);
+  return toDTO(after, names);
 }

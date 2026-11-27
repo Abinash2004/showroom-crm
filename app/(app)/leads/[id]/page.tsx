@@ -10,7 +10,6 @@ import { requireActor } from "@/lib/auth/session";
 import { listBranches } from "@/lib/db/repositories/branches";
 import { getLead } from "@/lib/db/repositories/leads";
 import { listInteractionsForLead } from "@/lib/db/repositories/interactions";
-import { todayInputDate } from "@/lib/format";
 import { objectIdSchema } from "@/lib/validators/common";
 
 export const metadata: Metadata = { title: "Lead Information" };
@@ -23,14 +22,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   const lead = await getLead(actor, parsedId.data);
   if (!lead) notFound();
   const [interactions, branches] = await Promise.all([listInteractionsForLead(actor, lead.id), listBranches(actor)]);
-  // Choices for moving the lead: the actor's active branches, plus its current branch even if inactive.
-  const branchOptions = branches
-    .filter((b) => b.isActive || b.id === lead.branchId)
-    .map((b) => ({ id: b.id, name: b.name, location: b.location, isActive: b.isActive }));
-  if (!branchOptions.some((b) => b.id === lead.branchId)) {
-    branchOptions.unshift({ id: lead.branchId, name: lead.branchName, location: "", isActive: true });
-  }
-  const today = todayInputDate();
+  // Shown next to the branch name in the read-only summary.
+  const branchLocation = branches.find((b) => b.id === lead.branchId)?.location;
   // A closed lead (Rejected or Purchased) needs no further follow-ups.
   const closed = lead.status === "Rejected" || lead.status === "Purchased";
 
@@ -38,7 +31,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     <>
       <AppBar title="Lead Information" backHref="/leads" parent="Leads" />
       <PageBody className="space-y-5">
-        <LeadEditor lead={lead} branches={branchOptions} today={today} />
+        <LeadEditor lead={lead} branchLocation={branchLocation} />
 
         <section aria-labelledby="history-heading" className="space-y-3">
           <div className="flex min-h-12 items-center justify-between gap-3">
@@ -46,7 +39,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               Interactions
               <span className="font-mono text-sm font-medium tabular-nums text-muted">{interactions.length}</span>
             </h2>
-            {closed ? null : <LogInteractionSheet leadId={lead.id} today={today} />}
+            {closed ? null : <LogInteractionSheet leadId={lead.id} />}
           </div>
           {interactions.length === 0 ? (
             <EmptyState title="No interactions yet">
@@ -59,7 +52,6 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
                 <InteractionItem
                   key={i.id}
                   interaction={i}
-                  today={today}
                   sequence={interactions.length - index}
                   total={interactions.length}
                 />

@@ -1,10 +1,28 @@
 import { APP_TIMEZONE, APP_TZ_OFFSET_MINUTES } from "@/lib/constants";
 
-const dateFmt = new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
+const dateFmt = new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: APP_TIMEZONE });
 const dateTimeFmt = new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: APP_TIMEZONE });
+const stampDayFmt = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: APP_TIMEZONE });
+const stampTimeFmt = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: APP_TIMEZONE });
+const cardTimeFmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: APP_TIMEZONE });
 
-/** Date-only values (visit date, interaction date) are stored at UTC midnight and shown in UTC. */
+/**
+ * Calendar day in showroom time (IST). Visit and interaction dates are server timestamps; older records
+ * were stored at UTC midnight (05:30 IST), which still falls on the same IST day.
+ */
 export const formatDate = (iso: string): string => dateFmt.format(new Date(iso));
+
+/** "29 Nov 2026 | 08:00 PM" in showroom time (IST). Used by the read-only date fields. */
+export function formatStamp(iso: string): string {
+  const d = new Date(iso);
+  return `${stampDayFmt.format(d)} | ${stampTimeFmt.format(d)}`;
+}
+
+/** "27 Nov 2026 | 8:00 PM" in showroom time (IST): the lead and follow-up cards. */
+export function formatCardStamp(iso: string): string {
+  const d = new Date(iso);
+  return `${stampDayFmt.format(d)} | ${cardTimeFmt.format(d)}`;
+}
 export const formatDateTime = (iso: string): string => dateTimeFmt.format(new Date(iso));
 const shortDateFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", timeZone: "UTC" });
 const shortDateYearFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
@@ -19,7 +37,6 @@ export function formatPhone(phone: string): string {
   return /^\d{10}$/.test(phone) ? `${phone.slice(0, 5)} ${phone.slice(5)}` : phone;
 }
 
-export const toInputDate = (iso: string): string => iso.slice(0, 10);
 export const todayInputDate = (): string => new Date(Date.now() + APP_TZ_OFFSET_MINUTES * 60_000).toISOString().slice(0, 10);
 /** "just now", "5 min ago", "2 h ago", or the date and time when older than a day. */
 export function formatAgo(iso: string, nowMs: number): string {

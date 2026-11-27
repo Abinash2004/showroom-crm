@@ -12,8 +12,6 @@ interface BranchFieldProps {
   branches: BranchOption[];
   defaultValue?: string;
   error?: string;
-  /** Called after the user picks a branch (the hidden input does not fire input/change events). */
-  onValueChange?: (id: string) => void;
 }
 
 /**
@@ -28,7 +26,7 @@ const control =
  * Form field version of the branch switcher: tap opens the same branch sheet, one tap picks.
  * The value is posted through a hidden input. With a single branch it is fixed and not tappable.
  */
-export function BranchField({ name, label, branches, defaultValue, error, onValueChange }: BranchFieldProps) {
+export function BranchField({ name, label, branches, defaultValue, error }: BranchFieldProps) {
   const id = useId();
   const labelId = `${id}-label`;
   const errorId = `${id}-error`;
@@ -75,10 +73,7 @@ export function BranchField({ name, label, branches, defaultValue, error, onValu
           selectedId={value || undefined}
           title="Choose branch"
           description="Which branch did the customer visit?"
-          onSelect={(next) => {
-            setValue(next ?? "");
-            onValueChange?.(next ?? "");
-          }}
+          onSelect={(next) => setValue(next ?? "")}
           trigger={
             <button
               type="button"

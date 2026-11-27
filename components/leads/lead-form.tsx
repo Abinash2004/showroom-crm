@@ -4,19 +4,22 @@ import { createLeadAction } from "@/lib/actions/leads";
 import { leadCreateSchema } from "@/lib/validators/entities";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@/components/icons";
-import { DateField, FormError, TextAreaField, TextField } from "@/components/forms/fields";
+import { FormError, StampField, TextAreaField, TextField } from "@/components/forms/fields";
 import { useActionForm } from "@/components/forms/use-action-form";
 import type { BranchDTO } from "@/lib/types";
 import { BranchField } from "./branch-field";
 
-/** New-lead form. On success the server action redirects to the new lead. Editing happens inline on the lead page. */
-export function LeadForm({ branches, today }: { branches: BranchDTO[]; today: string }) {
+/**
+ * New-lead form. On success the server action redirects to the new lead. Name, phones and branch are fixed
+ * from here on; only status, location and vehicle details can be edited on the lead page.
+ */
+export function LeadForm({ branches }: { branches: BranchDTO[] }) {
   const form = useActionForm(leadCreateSchema, createLeadAction);
   return (
     <form action={form.formAction} noValidate className="space-y-4">
       <FormError error={form.error} />
       {/* Paired fields share a row 50/50; min-w-0 lets the narrow columns shrink below their content width. */}
-      <div className="grid grid-cols-2 items-start gap-3 [&>*]:min-w-0">
+      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 [&>*]:min-w-0">
         <BranchField
           name="branchId"
           label="Branch"
@@ -24,14 +27,8 @@ export function LeadForm({ branches, today }: { branches: BranchDTO[]; today: st
           defaultValue={form.value("branchId")}
           error={form.fieldError("branchId")}
         />
-        <DateField
-          label="Visit date"
-          name="visitDate"
-          required
-          max={today}
-          defaultValue={form.value("visitDate", today)}
-          error={form.fieldError("visitDate")}
-        />
+        {/* The server stamps the real time on save; this shows the current time. */}
+        <StampField label="Visit date" />
       </div>
       <TextField
         label="Customer name"

@@ -1,6 +1,10 @@
 export const LEAD_STATUSES = ["Opened", "Booked", "Rejected", "Purchased"] as const;
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
+/** Lead list filter by number of interactions: exactly 0, exactly 1, exactly 2, or more than 2 ("more", shown as "2+"). */
+export const INTERACTION_BUCKETS = ["0", "1", "2", "more"] as const;
+export type InteractionBucket = (typeof INTERACTION_BUCKETS)[number];
+
 export const ACTIVITY_ENTITIES = ["branch", "user", "lead", "interaction"] as const;
 export type ActivityEntity = (typeof ACTIVITY_ENTITIES)[number];
 
