@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChatIcon, ListIcon, PlusIcon, ShieldIcon } from "@/components/icons";
+import { ChatIcon, PlusIcon, SettingsIcon, UsersIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { initials } from "@/lib/format";
 import { LiveWheelMark } from "./busy";
@@ -18,7 +18,7 @@ interface Item {
 const LEADS: Item = {
   href: "/leads",
   label: "Leads",
-  icon: (s) => <ListIcon width={s} height={s} />,
+  icon: (s) => <UsersIcon width={s} height={s} />,
   match: (p) => p === "/leads" || (/^\/leads\/[^/]+/.test(p) && p !== "/leads/new"),
 };
 const FOLLOW_UPS: Item = {
@@ -33,7 +33,7 @@ const NEW_LEAD: Item = {
   icon: (s) => <PlusIcon width={s} height={s} />,
   match: (p) => p === "/leads/new",
 };
-const ADMIN: Item = { href: "/admin", label: "Admin", icon: (s) => <ShieldIcon width={s} height={s} />, match: (p) => p.startsWith("/admin") };
+const ADMIN: Item = { href: "/admin", label: "Admin", icon: (s) => <SettingsIcon width={s} height={s} />, match: (p) => p.startsWith("/admin") };
 
 function Brand() {
   return (

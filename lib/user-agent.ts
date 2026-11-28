@@ -35,13 +35,13 @@ export function describeDevice(ua: string): DeviceInfo {
 }
 
 /**
- * Readable client address: loopback becomes "This computer", IPv4-mapped IPv6 ("::ffff:1.2.3.4") is
+ * Readable client address: loopback becomes "Local", IPv4-mapped IPv6 ("::ffff:1.2.3.4") is
  * shown as plain IPv4, and a missing address as "Unknown network".
  */
 export function describeIp(ip: string): string {
   const raw = ip.trim();
   if (!raw || raw === "unknown") return "Unknown network";
-  if (raw === "::1" || raw === "127.0.0.1" || raw === "::ffff:127.0.0.1") return "This computer";
+  if (raw === "::1" || raw === "127.0.0.1" || raw === "::ffff:127.0.0.1") return "Local";
   const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(raw);
   return mapped?.[1] ?? raw;
 }

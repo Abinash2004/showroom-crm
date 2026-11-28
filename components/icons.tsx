@@ -21,8 +21,13 @@ function Icon({ children, ...props }: SVGProps<SVGSVGElement>) {
   );
 }
 
-export const ListIcon = (p: SVGProps<SVGSVGElement>) => (
-  <Icon {...p}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></Icon>
+/** Two people (Lucide "users"): the customers behind the leads. */
+export const UsersIcon = (p: SVGProps<SVGSVGElement>) => (
+  <Icon {...p}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+  </Icon>
 );
 export const PlusIcon = (p: SVGProps<SVGSVGElement>) => (
   <Icon {...p}><path d="M12 5v14M5 12h14" /></Icon>
@@ -41,6 +46,13 @@ export const ChatIcon = (p: SVGProps<SVGSVGElement>) => (
 );
 export const ShieldIcon = (p: SVGProps<SVGSVGElement>) => (
   <Icon {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></Icon>
+);
+/** Settings gear (Lucide "settings"): administration. */
+export const SettingsIcon = (p: SVGProps<SVGSVGElement>) => (
+  <Icon {...p}>
+    <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
+    <circle cx="12" cy="12" r="3" />
+  </Icon>
 );
 export const UserIcon = (p: SVGProps<SVGSVGElement>) => (
   <Icon {...p}><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></Icon>

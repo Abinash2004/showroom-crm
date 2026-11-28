@@ -28,7 +28,7 @@ export default async function UsersPage() {
   const actor = await requireAdminPage();
   const [users, branches, sessions] = await Promise.all([listUsers(actor), listBranches(actor), listActiveSessions(actor)]);
   // O(1) lookups per branch id and signed-in user while rendering the cards.
-  const branchNames = new Map(branches.map((b) => [b.id, b.name]));
+  const branchById = new Map(branches.map((b) => [b.id, b]));
   const online = new Set(sessions.map((s) => s.userId));
   const active = users.filter((u) => u.isActive).length;
 
@@ -54,9 +54,8 @@ export default async function UsersPage() {
               if (!u.isActive) tags.push({ label: "Inactive", tone: "danger" });
               if (u.isLocked) tags.push({ label: "Locked", tone: "danger" });
               if (!u.hasPassword) tags.push({ label: "Sign-up pending", tone: "warn" });
-              const branchLine = u.isAdmin
-                ? "All branches"
-                : u.branchIds.map((id) => branchNames.get(id) ?? "Unknown").join(", ") || "No branch";
+              // Assigned branches as "Name · Location"; admins see every branch.
+              const assigned = u.branchIds.map((id) => ({ id, branch: branchById.get(id) }));
 
               return (
                 <li key={u.id} className="min-w-0">
@@ -82,23 +81,35 @@ export default async function UsersPage() {
                       ) : null}
                     </div>
 
-                    {/* 2. Phone */}
-                    <p className="mt-1.5 flex items-center gap-1.5 text-[0.9375rem] font-semibold tabular-nums tracking-wide">
-                      <PhoneIcon aria-hidden="true" width={15} height={15} className="shrink-0 text-muted" />
-                      {formatPhone(u.phone)}
-                    </p>
-
-                    {/* 3. Branch access */}
-                    <p className="mt-1 flex min-w-0 items-center gap-1.5 text-sm text-fg/80">
-                      <StoreIcon aria-hidden="true" width={14} height={14} className="shrink-0 text-muted" />
-                      <span className="truncate">{branchLine}</span>
-                    </p>
-
-                    {/* 4. Last login bottom-left; Deactivate/Activate (or "You" on your own card) bottom-right */}
-                    <div className="mt-auto flex min-h-9 items-end justify-between gap-3 pt-4">
-                      <p className="min-w-0 truncate text-xs tabular-nums text-muted">
-                        Last login <span className="font-semibold text-fg">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "never"}</span>
-                      </p>
+                    {/* 2. Phone, branch access and last login stacked, Deactivate/Activate (or "You") beside them */}
+                    <div className="mt-2 flex flex-1 items-end justify-between gap-3">
+                      <div className="min-w-0 space-y-2">
+                        <p className="flex items-center gap-1.5 text-[0.9375rem] font-semibold tabular-nums tracking-wide">
+                          <PhoneIcon aria-hidden="true" width={15} height={15} className="shrink-0 text-muted" />
+                          {formatPhone(u.phone)}
+                        </p>
+                        <p className="flex min-w-0 items-center gap-1.5 text-sm text-fg/80">
+                          <StoreIcon aria-hidden="true" width={14} height={14} className="shrink-0 text-muted" />
+                          <span className="truncate">
+                            {u.isAdmin ? (
+                              "All branches"
+                            ) : assigned.length === 0 ? (
+                              "No branch"
+                            ) : (
+                              assigned.map(({ id, branch }, i) => (
+                                <span key={id}>
+                                  {i > 0 ? ", " : null}
+                                  {branch?.name ?? "Unknown"}
+                                  {branch?.location ? <span className="text-muted"> · {branch.location}</span> : null}
+                                </span>
+                              ))
+                            )}
+                          </span>
+                        </p>
+                        <p className="truncate text-xs tabular-nums text-muted">
+                          Last login <span className="font-semibold text-fg">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "never"}</span>
+                        </p>
+                      </div>
                       {u.id !== actor.id ? (
                         <div className="pointer-events-auto shrink-0">
                           <ToggleActive kind="user" id={u.id} name={u.name} isActive={u.isActive} />

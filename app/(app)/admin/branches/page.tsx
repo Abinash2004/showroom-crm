@@ -59,17 +59,17 @@ export default async function BranchesPage() {
                     </span>
                   </div>
 
-                  {/* 2. Phone, right under the name */}
-                  <p className="mt-1.5 flex items-center gap-1.5 text-[0.9375rem] font-semibold tabular-nums tracking-wide">
-                    <PhoneIcon aria-hidden="true" width={15} height={15} className="shrink-0 text-muted" />
-                    {formatPhone(b.phone)}
-                  </p>
-
-                  {/* 3. Code bottom-left, Deactivate/Activate bottom-right */}
-                  <div className="mt-auto flex items-end justify-between gap-3 pt-4">
-                    <p className="min-w-0 truncate text-xs text-muted">
-                      Code <span className="font-semibold text-fg">{b.code}</span>
-                    </p>
+                  {/* 2. Phone and code stacked, Deactivate/Activate beside them (no empty row under the phone) */}
+                  <div className="mt-2 flex flex-1 items-end justify-between gap-3">
+                    <div className="min-w-0 space-y-2">
+                      <p className="flex items-center gap-1.5 text-[0.9375rem] font-semibold tabular-nums tracking-wide">
+                        <PhoneIcon aria-hidden="true" width={15} height={15} className="shrink-0 text-muted" />
+                        {formatPhone(b.phone)}
+                      </p>
+                      <p className="truncate text-xs text-muted">
+                        Code <span className="font-semibold text-fg">{b.code}</span>
+                      </p>
+                    </div>
                     <div className="pointer-events-auto shrink-0">
                       <ToggleActive kind="branch" id={b.id} name={b.name} isActive={b.isActive} />
                     </div>

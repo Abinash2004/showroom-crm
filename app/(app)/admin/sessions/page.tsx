@@ -113,8 +113,16 @@ export default async function SessionsPage() {
                         <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-3">
                           <div className="min-w-0">
                             <p className="truncate text-[0.9375rem] font-medium">{device.label}</p>
-                            <p className="mt-0.5 truncate text-xs tabular-nums text-muted">
-                              {describeIp(s.userIp)} &middot; Signed in {formatDateTime(s.createdAt)}
+                            {/* Phones: two lines, so neither gets cut off. From 640px: one line with a dot between. */}
+                            <p className="mt-0.5 flex flex-col text-xs tabular-nums text-muted sm:flex-row sm:gap-1">
+                              <span className="truncate">
+                                <span className="sm:hidden">IP: </span>
+                                {describeIp(s.userIp)}
+                              </span>
+                              <span aria-hidden="true" className="hidden sm:inline">
+                                &middot;
+                              </span>
+                              <span className="truncate">Signed in {formatDateTime(s.createdAt)}</span>
                             </p>
                           </div>
                           <span
