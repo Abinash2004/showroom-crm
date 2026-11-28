@@ -66,12 +66,14 @@ export default async function UsersPage() {
                   <EditableUserCard user={u} branches={branches}>
                     {/* 1. Name + code on one line, tags on the right */}
                     <div className="flex items-start justify-between gap-3">
-                      <h2 className="flex min-w-0 items-baseline gap-2">
-                        <span className="line-clamp-1 min-w-0 text-[1.0625rem] font-semibold leading-snug [overflow-wrap:anywhere]">{u.name}</span>
+                      {/* Name and code share a wrapping row: the code sits beside the name when both fit, otherwise it drops to the next line (the name is never cut off). */}
+                      <h2 className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <span className="min-w-0 text-[1.0625rem] font-semibold leading-snug [overflow-wrap:anywhere]">{u.name}</span>
                         <span className="shrink-0 text-xs font-semibold text-muted">{u.code}</span>
                       </h2>
+                      {/* Tags keep their natural width (one row when they fit, up to 60% of the card), so the name gets all the rest. */}
                       {tags.length > 0 ? (
-                        <div className="flex max-w-[55%] flex-wrap justify-end gap-1.5">
+                        <div className="flex max-w-[60%] shrink-0 flex-wrap justify-end gap-1.5">
                           {tags.map((t) => (
                             <span key={t.label} className={cn("rounded-full px-2.5 py-1 text-xs font-semibold leading-4", TONES[t.tone])}>
                               {t.label}
