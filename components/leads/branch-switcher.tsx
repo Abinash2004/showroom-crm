@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useBusySignal } from "@/components/layout/busy";
-import { Spinner, StoreIcon } from "@/components/icons";
+import { StoreIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { rememberBranch } from "@/lib/branch-preference";
 import { buildHref } from "@/lib/url";
@@ -67,7 +67,7 @@ export function BranchSwitcher({ branches, selectedId, base, path = "/leads", cl
             aria-hidden="true"
             className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/15"
           >
-            {pending ? <Spinner width={18} height={18} /> : <StoreIcon width={18} height={18} />}
+            <StoreIcon width={18} height={18} />
           </span>
           <CompactBranchLabel name={selected.name} location={selected.location} className="min-w-0" nameClassName="text-[var(--accent-on-ink)]" />
         </button>
